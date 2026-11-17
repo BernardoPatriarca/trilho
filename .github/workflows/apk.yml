@@ -1,0 +1,103 @@
+name: APK
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      TRILHO_KEYSTORE_BASE64: ${{ secrets.TRILHO_KEYSTORE_BASE64 }}
+      TRILHO_KEYSTORE_PASSWORD: ${{ secrets.TRILHO_KEYSTORE_PASSWORD }}
+      TRILHO_KEY_ALIAS: ${{ secrets.TRILHO_KEY_ALIAS }}
+      TRILHO_KEY_PASSWORD: ${{ secrets.TRILHO_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.50.0'
+          channel: stable
+          cache: true
+
+      - name: Dependências
+        run: flutter pub get
+
+      - name: Versão do pubspec
+        id: ver
+        run: |
+          V=$(grep '^version:' pubspec.yaml | sed 's/^version:[[:space:]]*//; s/+.*//')
+          echo "v=$V" >> "$GITHUB_OUTPUT"
+
+      - name: Análise
+        run: flutter analyze
+
+      - name: Testes
+        run: flutter test
+
+      - name: Chave de release (se os secrets existirem)
+        if: env.TRILHO_KEYSTORE_BASE64 != ''
+        run: |
+          echo "$TRILHO_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/trilho-release.jks"
+          {
+            echo "storeFile=$RUNNER_TEMP/trilho-release.jks"
+            echo "storePassword=$TRILHO_KEYSTORE_PASSWORD"
+            echo "keyAlias=$TRILHO_KEY_ALIAS"
+            echo "keyPassword=$TRILHO_KEY_PASSWORD"
+          } > android/key.properties
+
+      - name: APK universal
+        run: flutter build apk --release
+
+      - name: APKs por arquitetura
+        run: flutter build apk --release --split-per-abi
+
+      - name: Conferir que não há permissão INTERNET
+        run: |
+          AAPT2=$(ls "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          cd build/app/outputs/flutter-apk
+          ls -la *.apk
+          for apk in *.apk; do
+            echo "== $apk"
+            "$AAPT2" dump permissions "$apk"
+            if "$AAPT2" dump permissions "$apk" | grep -q 'android.permission.INTERNET'; then
+              echo "::error::$apk pede INTERNET"; exit 1
+            fi
+          done
+          "$AAPT2" dump badging app-release.apk | grep -E "^package:|application-label"
+          if [ -f ../../../../android/key.properties ]; then SIG="chave de release"; else SIG="chave de TESTE"; fi
+          {
+            echo "## Trilho — APKs"
+            echo
+            echo "Assinatura: $SIG"
+            echo
+            echo '| Arquivo | Tamanho |'
+            echo '|---|---|'
+            for apk in *.apk; do echo "| $apk | $(du -h "$apk" | cut -f1) |"; done
+          } | tee -a "$GITHUB_STEP_SUMMARY" > "$RUNNER_TEMP/notas.md"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: trilho-apk
+          path: build/app/outputs/flutter-apk/*.apk
+
+      - name: Publicar release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.ver.outputs.v }}-build.${{ github.run_number }}
+          name: Trilho ${{ steps.ver.outputs.v }} (build ${{ github.run_number }})
+          target_commitish: ${{ github.sha }}
+          prerelease: true
+          body_path: ${{ runner.temp }}/notas.md
+          files: build/app/outputs/flutter-apk/*.apk
