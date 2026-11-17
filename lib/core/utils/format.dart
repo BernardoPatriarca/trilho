@@ -12,3 +12,6 @@ String shortDate(DateTime d) => DateFormat('dd/MM/yyyy', 'pt_BR').format(d);
 
 /// "14:30"
 String hourMinute(DateTime d) => DateFormat('HH:mm', 'pt_BR').format(d);
+
+/// "novembro de 2026"
+String longMonthYear(DateTime d) => DateFormat("MMMM 'de' y", 'pt_BR').format(d);

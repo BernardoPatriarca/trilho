@@ -63,5 +63,4 @@ DailySummary buildDailySummary({
   return DailySummary(title, lines);
 }
 
-String _checklistSuffix(ChecklistProgress? p) =>
-    p == null || p.isEmpty ? '' : ' (${p.label} itens)';
+String _checklistSuffix(ChecklistProgress? p) => p == null || p.isEmpty ? '' : ' (${p.label} itens)';

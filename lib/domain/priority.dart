@@ -17,8 +17,6 @@ enum Priority {
   /// Rótulo curto: "P1".
   String get code => 'P$value';
 
-  static Priority fromValue(int value) => Priority.values.firstWhere(
-        (p) => p.value == value,
-        orElse: () => Priority.p4,
-      );
+  static Priority fromValue(int value) =>
+      Priority.values.firstWhere((p) => p.value == value, orElse: () => Priority.p4);
 }

@@ -32,8 +32,16 @@ void main() {
       Task(title: title, dueDate: due, dueMinutes: min, priority: p, createdAt: now, updatedAt: now);
 
   test('lembrete de tarefa com hora e só com data (9h padrão)', () async {
-    await tasks.save(TaskDraft(task: t('Prender o varão', due: DateTime(2026, 11, 18), min: 18 * 60)), now: now);
-    await tasks.save(TaskDraft(task: t('Pagar conta', due: DateTime(2026, 11, 19))), now: now);
+    await tasks.save(
+      TaskDraft(
+        task: t('Prender o varão', due: DateTime(2026, 11, 18), min: 18 * 60),
+      ),
+      now: now,
+    );
+    await tasks.save(
+      TaskDraft(task: t('Pagar conta', due: DateTime(2026, 11, 19))),
+      now: now,
+    );
     await scheduler.sync();
     final rem = gw.ofKind(PlannedKind.lembrete);
     expect(rem.map((n) => toIsoDateTime(n.fireAt)), ['2026-11-18T18:00', '2026-11-19T09:00']);
@@ -43,7 +51,10 @@ void main() {
   });
 
   test('resumos dos próximos 7 dias às 7h, com conteúdo do dia', () async {
-    await tasks.save(TaskDraft(task: t('Relatório', due: DateTime(2026, 11, 18), p: 1)), now: now);
+    await tasks.save(
+      TaskDraft(task: t('Relatório', due: DateTime(2026, 11, 18), p: 1)),
+      now: now,
+    );
     await scheduler.sync();
     final res = gw.ofKind(PlannedKind.resumo);
     expect(res, hasLength(7));
@@ -56,7 +67,12 @@ void main() {
   });
 
   test('idempotente: a segunda sincronização não mexe em nada', () async {
-    await tasks.save(TaskDraft(task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60)), now: now);
+    await tasks.save(
+      TaskDraft(
+        task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60),
+      ),
+      now: now,
+    );
     final r1 = await scheduler.sync();
     final calls = gw.scheduleCalls;
     final r2 = await scheduler.sync();
@@ -69,7 +85,12 @@ void main() {
   });
 
   test('ids determinísticos e estáveis entre sincronizações', () async {
-    await tasks.save(TaskDraft(task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60)), now: now);
+    await tasks.save(
+      TaskDraft(
+        task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60),
+      ),
+      now: now,
+    );
     await scheduler.sync();
     final ids = gw.scheduled.keys.toSet();
     await scheduler.rescheduleAll();
@@ -77,7 +98,12 @@ void main() {
   });
 
   test('concluir cancela o lembrete na hora', () async {
-    final id = await tasks.save(TaskDraft(task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60)), now: now);
+    final id = await tasks.save(
+      TaskDraft(
+        task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60),
+      ),
+      now: now,
+    );
     await scheduler.sync();
     final remId = gw.ofKind(PlannedKind.lembrete).single.id;
     await tasks.complete(id, now);
@@ -87,10 +113,22 @@ void main() {
   });
 
   test('editar a hora reagenda só o que mudou', () async {
-    final id = await tasks.save(TaskDraft(task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60)), now: now);
+    final id = await tasks.save(
+      TaskDraft(
+        task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60),
+      ),
+      now: now,
+    );
     await scheduler.sync();
     final d = (await tasks.get(id))!;
-    await tasks.save(TaskDraft(task: d.task.copyWith(dueMinutes: 20 * 60), reminders: d.reminders, remindersTouched: true), now: now);
+    await tasks.save(
+      TaskDraft(
+        task: d.task.copyWith(dueMinutes: 20 * 60),
+        reminders: d.reminders,
+        remindersTouched: true,
+      ),
+      now: now,
+    );
     final r = await scheduler.sync();
     expect(gw.ofKind(PlannedKind.lembrete).single.fireAt, DateTime(2026, 11, 18, 20));
     // Lembrete + resumo do dia 18 (título igual; corpo igual) → só o lembrete muda.
@@ -102,7 +140,18 @@ void main() {
     await scheduler.sync();
     final before = gw.ofKind(PlannedKind.resumo).first;
     expect(before.body, 'Dia livre na agenda. Que tal adiantar algo da semana?');
-    await events.save(EventDraft(event: Event(title: 'Dentista', start: DateTime(2026, 11, 18, 14, 30), end: DateTime(2026, 11, 18, 15, 30), createdAt: now, updatedAt: now)), now: now);
+    await events.save(
+      EventDraft(
+        event: Event(
+          title: 'Dentista',
+          start: DateTime(2026, 11, 18, 14, 30),
+          end: DateTime(2026, 11, 18, 15, 30),
+          createdAt: now,
+          updatedAt: now,
+        ),
+      ),
+      now: now,
+    );
     await scheduler.sync();
     final after = gw.ofKind(PlannedKind.resumo).first;
     expect(after.id, before.id);
@@ -113,7 +162,13 @@ void main() {
   test('evento recorrente: um lembrete por ocorrência dentro de 30 dias', () async {
     await events.save(
       EventDraft(
-        event: Event(title: 'Aula', start: DateTime(2026, 11, 2, 9), end: DateTime(2026, 11, 2, 10), createdAt: now, updatedAt: now),
+        event: Event(
+          title: 'Aula',
+          start: DateTime(2026, 11, 2, 9),
+          end: DateTime(2026, 11, 2, 10),
+          createdAt: now,
+          updatedAt: now,
+        ),
         rule: const RecurrenceRule(freq: Freq.semanal, weekdays: [1, 3]),
       ),
       now: now,
@@ -132,7 +187,13 @@ void main() {
   test('teto de 400 notificações', () async {
     await events.save(
       EventDraft(
-        event: Event(title: 'Remédio', start: DateTime(2026, 11, 1, 0, 30), end: DateTime(2026, 11, 1, 0, 45), createdAt: now, updatedAt: now),
+        event: Event(
+          title: 'Remédio',
+          start: DateTime(2026, 11, 1, 0, 30),
+          end: DateTime(2026, 11, 1, 0, 45),
+          createdAt: now,
+          updatedAt: now,
+        ),
         rule: const RecurrenceRule(freq: Freq.diaria),
         reminders: [for (var m = 0; m < 20; m++) Reminder.relative(m)],
         remindersTouched: true,
@@ -158,7 +219,12 @@ void main() {
 
   test('sem alarme exato: agenda inexato e reagenda quando a permissão chega', () async {
     gw.exact = false;
-    await tasks.save(TaskDraft(task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60)), now: now);
+    await tasks.save(
+      TaskDraft(
+        task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60),
+      ),
+      now: now,
+    );
     final r1 = await scheduler.sync();
     expect(r1.exact, isFalse);
     gw.exact = true;
@@ -168,7 +234,12 @@ void main() {
   });
 
   test('o tempo passa: notificações disparadas saem da tabela e a janela anda', () async {
-    await tasks.save(TaskDraft(task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60)), now: now);
+    await tasks.save(
+      TaskDraft(
+        task: t('a', due: DateTime(2026, 11, 18), min: 18 * 60),
+      ),
+      now: now,
+    );
     await scheduler.sync();
     now = DateTime(2026, 11, 19, 8);
     final r = await scheduler.sync();

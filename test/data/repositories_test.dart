@@ -21,8 +21,15 @@ import 'test_db.dart';
 final now = DateTime(2026, 11, 17, 10);
 final today = DateTime(2026, 11, 17);
 
-Task newTask(String title, {DateTime? due, int? min, int priority = 4, int? cat}) =>
-    Task(title: title, dueDate: due, dueMinutes: min, priority: priority, categoryId: cat, createdAt: now, updatedAt: now);
+Task newTask(String title, {DateTime? due, int? min, int priority = 4, int? cat}) => Task(
+  title: title,
+  dueDate: due,
+  dueMinutes: min,
+  priority: priority,
+  categoryId: cat,
+  createdAt: now,
+  updatedAt: now,
+);
 
 Event newEvent(String title, DateTime start, DateTime end, {bool allDay = false}) =>
     Event(title: title, start: start, end: end, allDay: allDay, createdAt: now, updatedAt: now);
@@ -41,7 +48,9 @@ void main() {
 
   group('schema e seeds', () {
     test('todas as tabelas existem e as chaves estrangeiras estão ligadas', () async {
-      final names = (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'")).map((r) => r['name']).toSet();
+      final names = (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='table'"))
+          .map((r) => r['name'])
+          .toSet();
       expect(names, containsAll(tablesInOrder));
       expect((await db.rawQuery('PRAGMA foreign_keys')).first.values.first, 1);
       final idx = (await db.rawQuery("SELECT name FROM sqlite_master WHERE type='index' AND name LIKE 'idx_%'")).length;
@@ -67,7 +76,12 @@ void main() {
 
     test('CHECK do banco: hora só com data', () async {
       expect(
-        () => db.insert('tarefa', {'titulo': 'x', 'hora_prazo': '10:00', 'criada_em': '2026-01-01T00:00', 'atualizada_em': '2026-01-01T00:00'}),
+        () => db.insert('tarefa', {
+          'titulo': 'x',
+          'hora_prazo': '10:00',
+          'criada_em': '2026-01-01T00:00',
+          'atualizada_em': '2026-01-01T00:00',
+        }),
         throwsA(isA<DatabaseException>()),
       );
     });
@@ -78,7 +92,10 @@ void main() {
       final id = await tasks.save(
         TaskDraft(
           task: newTask('Ir ao mercado', due: DateTime(2026, 11, 18), min: 18 * 60, priority: 2, cat: 7),
-          checklist: const [ChecklistItem(text: 'Óleo', quantity: '1'), ChecklistItem(text: 'Açúcar', quantity: '2 kg')],
+          checklist: const [
+            ChecklistItem(text: 'Óleo', quantity: '1'),
+            ChecklistItem(text: 'Açúcar', quantity: '2 kg'),
+          ],
           tagNames: const ['Casa', '#casa', 'semanal'],
         ),
         now: now,
@@ -103,11 +120,25 @@ void main() {
     });
 
     test('editar checklist mantém ids e atualiza a busca', () async {
-      final id = await tasks.save(TaskDraft(task: newTask('Lista'), checklist: const [ChecklistItem(text: 'pão')]), now: now);
+      final id = await tasks.save(
+        TaskDraft(
+          task: newTask('Lista'),
+          checklist: const [ChecklistItem(text: 'pão')],
+        ),
+        now: now,
+      );
       final d = (await tasks.get(id))!;
       await tasks.save(
-          TaskDraft(task: d.task, checklist: [d.checklist.first.copyWith(checked: true), const ChecklistItem(text: 'café')], remindersTouched: true),
-          now: now);
+        TaskDraft(
+          task: d.task,
+          checklist: [
+            d.checklist.first.copyWith(checked: true),
+            const ChecklistItem(text: 'café'),
+          ],
+          remindersTouched: true,
+        ),
+        now: now,
+      );
       final d2 = (await tasks.get(id))!;
       expect(d2.checklist.first.id, d.checklist.first.id);
       expect(d2.checklist.first.checked, isTrue);
@@ -118,7 +149,10 @@ void main() {
       final id = await tasks.save(
         TaskDraft(
           task: newTask('Mercado semanal', due: DateTime(2026, 11, 16), min: 18 * 60),
-          checklist: const [ChecklistItem(text: 'arroz', checked: true), ChecklistItem(text: 'leite')],
+          checklist: const [
+            ChecklistItem(text: 'arroz', checked: true),
+            ChecklistItem(text: 'leite'),
+          ],
           tagNames: const ['casa'],
           reminders: const [Reminder.relative(30)],
           rule: const RecurrenceRule(freq: Freq.semanal, weekdays: [1]),
@@ -146,7 +180,12 @@ void main() {
     });
 
     test('adiar incrementa adiamentos e desfazer restaura', () async {
-      final id = await tasks.save(TaskDraft(task: newTask('Prender o varão', due: today, min: 9 * 60)), now: now);
+      final id = await tasks.save(
+        TaskDraft(
+          task: newTask('Prender o varão', due: today, min: 9 * 60),
+        ),
+        now: now,
+      );
       final before = await tasks.postponeTo(id, today, 19 * 60, now);
       final t = (await tasks.get(id))!.task;
       expect(t.dueMinutes, 19 * 60);
@@ -156,9 +195,20 @@ void main() {
     });
 
     test('reagendar atrasadas para hoje', () async {
-      await tasks.save(TaskDraft(task: newTask('a', due: DateTime(2026, 11, 10))), now: now);
-      await tasks.save(TaskDraft(task: newTask('b', due: today, min: 8 * 60)), now: now);
-      await tasks.save(TaskDraft(task: newTask('c', due: DateTime(2026, 11, 20))), now: now);
+      await tasks.save(
+        TaskDraft(task: newTask('a', due: DateTime(2026, 11, 10))),
+        now: now,
+      );
+      await tasks.save(
+        TaskDraft(
+          task: newTask('b', due: today, min: 8 * 60),
+        ),
+        now: now,
+      );
+      await tasks.save(
+        TaskDraft(task: newTask('c', due: DateTime(2026, 11, 20))),
+        now: now,
+      );
       final moved = await tasks.rescheduleOverdueToToday(now);
       expect(moved, hasLength(2));
       final data = await tasks.listData();
@@ -170,7 +220,15 @@ void main() {
 
     test('marcar item de checklist e progresso', () async {
       final id = await tasks.save(
-          TaskDraft(task: newTask('x'), checklist: const [ChecklistItem(text: 'a'), ChecklistItem(text: 'b')]), now: now);
+        TaskDraft(
+          task: newTask('x'),
+          checklist: const [
+            ChecklistItem(text: 'a'),
+            ChecklistItem(text: 'b'),
+          ],
+        ),
+        now: now,
+      );
       final items = (await tasks.get(id))!.checklist;
       final p = await tasks.setItemChecked(items.first.id!, true);
       expect(p.label, '1/2');
@@ -179,7 +237,13 @@ void main() {
 
     test('excluir remove checklist, tags e lembretes', () async {
       final id = await tasks.save(
-          TaskDraft(task: newTask('x', due: today), checklist: const [ChecklistItem(text: 'a')], tagNames: const ['t']), now: now);
+        TaskDraft(
+          task: newTask('x', due: today),
+          checklist: const [ChecklistItem(text: 'a')],
+          tagNames: const ['t'],
+        ),
+        now: now,
+      );
       await tasks.delete(id);
       expect(await db.query('checklist_item'), isEmpty);
       expect(await db.query('tarefa_tag'), isEmpty);
@@ -202,17 +266,26 @@ void main() {
       return expandEvents([s], day, day).single;
     }
 
-    Future<List<String>> starts(DateTime from, DateTime to) async =>
-        expandEvents(await events.seriesInRange(from, to), from, to).map((o) => '${toIsoDateTime(o.start)} ${o.title}').toList();
+    Future<List<String>> starts(DateTime from, DateTime to) async => expandEvents(
+      await events.seriesInRange(from, to),
+      from,
+      to,
+    ).map((o) => '${toIsoDateTime(o.start)} ${o.title}').toList();
 
     test('evento novo ganha o lembrete padrão', () async {
-      final id = await events.save(EventDraft(event: newEvent('Dentista', DateTime(2026, 11, 20, 14, 30), DateTime(2026, 11, 20, 15, 30))),
-          now: now, defaultReminderMin: 15);
+      final id = await events.save(
+        EventDraft(event: newEvent('Dentista', DateTime(2026, 11, 20, 14, 30), DateTime(2026, 11, 20, 15, 30))),
+        now: now,
+        defaultReminderMin: 15,
+      );
       expect((await events.get(id))!.reminders.single.offsetMin, 15);
     });
 
     test('validação: fim depois do início', () {
-      expect(() => events.save(EventDraft(event: newEvent('x', now, now)), now: now), throwsA(isA<ValidationException>()));
+      expect(
+        () => events.save(EventDraft(event: newEvent('x', now, now)), now: now),
+        throwsA(isA<ValidationException>()),
+      );
     });
 
     test('só este, este e os seguintes, todos', () async {
@@ -226,10 +299,18 @@ void main() {
       // Só este: 09/11 vira 11h.
       final o9 = await occOn(id, DateTime(2026, 11, 9));
       await events.saveOccurrence(
-          EditScope.onlyThis, o9, EventDraft(event: o9.event.copyWith(start: DateTime(2026, 11, 9, 11), end: DateTime(2026, 11, 9, 12))),
-          now: now);
-      expect(await starts(DateTime(2026, 11, 1), DateTime(2026, 11, 17)),
-          ['2026-11-02T09:00 Aula', '2026-11-09T11:00 Aula', '2026-11-16T09:00 Aula']);
+        EditScope.onlyThis,
+        o9,
+        EventDraft(
+          event: o9.event.copyWith(start: DateTime(2026, 11, 9, 11), end: DateTime(2026, 11, 9, 12)),
+        ),
+        now: now,
+      );
+      expect(await starts(DateTime(2026, 11, 1), DateTime(2026, 11, 17)), [
+        '2026-11-02T09:00 Aula',
+        '2026-11-09T11:00 Aula',
+        '2026-11-16T09:00 Aula',
+      ]);
 
       // Excluir só 16/11.
       await events.deleteOccurrence(EditScope.onlyThis, await occOn(id, DateTime(2026, 11, 16)), now: now);
@@ -241,7 +322,11 @@ void main() {
         EditScope.thisAndFollowing,
         o23,
         EventDraft(
-          event: o23.event.copyWith(title: 'Aula nova', start: DateTime(2026, 11, 23, 8), end: DateTime(2026, 11, 23, 9)),
+          event: o23.event.copyWith(
+            title: 'Aula nova',
+            start: DateTime(2026, 11, 23, 8),
+            end: DateTime(2026, 11, 23, 9),
+          ),
           rule: const RecurrenceRule(freq: Freq.semanal, weekdays: [1]),
         ),
         now: now,
@@ -249,14 +334,26 @@ void main() {
       expect(newId, isNot(id));
       final orig = (await events.get(id))!;
       expect(orig.rule!.until, DateTime(2026, 11, 22));
-      expect(await starts(DateTime(2026, 11, 20), DateTime(2026, 12, 1)), ['2026-11-23T08:00 Aula nova', '2026-11-30T08:00 Aula nova']);
+      expect(await starts(DateTime(2026, 11, 20), DateTime(2026, 12, 1)), [
+        '2026-11-23T08:00 Aula nova',
+        '2026-11-30T08:00 Aula nova',
+      ]);
 
       // Todos (da série nova): muda o horário para 7h.
       final o30 = await occOn(newId, DateTime(2026, 11, 30));
       await events.saveOccurrence(
-          EditScope.all, o30, EventDraft(event: o30.event.copyWith(start: DateTime(2026, 11, 30, 7), end: DateTime(2026, 11, 30, 8)), rule: const RecurrenceRule(freq: Freq.semanal, weekdays: [1])),
-          now: now);
-      expect(await starts(DateTime(2026, 11, 20), DateTime(2026, 12, 1)), ['2026-11-23T07:00 Aula nova', '2026-11-30T07:00 Aula nova']);
+        EditScope.all,
+        o30,
+        EventDraft(
+          event: o30.event.copyWith(start: DateTime(2026, 11, 30, 7), end: DateTime(2026, 11, 30, 8)),
+          rule: const RecurrenceRule(freq: Freq.semanal, weekdays: [1]),
+        ),
+        now: now,
+      );
+      expect(await starts(DateTime(2026, 11, 20), DateTime(2026, 12, 1)), [
+        '2026-11-23T07:00 Aula nova',
+        '2026-11-30T07:00 Aula nova',
+      ]);
 
       // Excluir este e os seguintes a partir de 30/11.
       await events.deleteOccurrence(EditScope.thisAndFollowing, await occOn(newId, DateTime(2026, 11, 30)), now: now);
@@ -264,9 +361,18 @@ void main() {
     });
 
     test('seriesInRange só traz únicos do intervalo e todas as recorrentes', () async {
-      await events.save(EventDraft(event: newEvent('Longe', DateTime(2026, 1, 1, 9), DateTime(2026, 1, 1, 10))), now: now);
-      await events.save(EventDraft(event: newEvent('Perto', DateTime(2026, 11, 17, 9), DateTime(2026, 11, 17, 10))), now: now);
-      await events.save(EventDraft(event: newEvent('Feriado', DateTime(2026, 11, 16), DateTime(2026, 11, 18), allDay: true)), now: now);
+      await events.save(
+        EventDraft(event: newEvent('Longe', DateTime(2026, 1, 1, 9), DateTime(2026, 1, 1, 10))),
+        now: now,
+      );
+      await events.save(
+        EventDraft(event: newEvent('Perto', DateTime(2026, 11, 17, 9), DateTime(2026, 11, 17, 10))),
+        now: now,
+      );
+      await events.save(
+        EventDraft(event: newEvent('Feriado', DateTime(2026, 11, 16), DateTime(2026, 11, 18), allDay: true)),
+        now: now,
+      );
       final s = await events.seriesInRange(today, today);
       expect(s.map((x) => x.event.title).toSet(), {'Perto', 'Feriado'});
     });
@@ -285,8 +391,14 @@ void main() {
   group('tags, categorias, modelos e filtros', () {
     test('mesclar tags', () async {
       final t = TagRepository(db);
-      final a = await tasks.save(TaskDraft(task: newTask('a'), tagNames: const ['compra']), now: now);
-      await tasks.save(TaskDraft(task: newTask('b'), tagNames: const ['compras']), now: now);
+      final a = await tasks.save(
+        TaskDraft(task: newTask('a'), tagNames: const ['compra']),
+        now: now,
+      );
+      await tasks.save(
+        TaskDraft(task: newTask('b'), tagNames: const ['compras']),
+        now: now,
+      );
       final all = await t.all();
       await t.merge(all.firstWhere((x) => x.name == 'compra').id!, all.firstWhere((x) => x.name == 'compras').id!);
       expect((await t.all()).map((x) => x.name), ['compras']);
@@ -295,12 +407,20 @@ void main() {
     });
 
     test('categoria com nome repetido é recusada', () async {
-      expect(() => CategoryRepository(db).save(const Category(name: 'casa', color: '#000000', icon: 'home')), throwsArgumentError);
+      expect(
+        () => CategoryRepository(db).save(const Category(name: 'casa', color: '#000000', icon: 'home')),
+        throwsArgumentError,
+      );
     });
 
     test('modelo salvo a partir da checklist', () async {
       final r = TemplateRepository(db);
-      await r.save(const ChecklistTemplate(name: 'Farmácia', items: [ChecklistItem(text: 'dipirona', quantity: '1 cx')]));
+      await r.save(
+        const ChecklistTemplate(
+          name: 'Farmácia',
+          items: [ChecklistItem(text: 'dipirona', quantity: '1 cx')],
+        ),
+      );
       final all = await r.all();
       expect(all.map((t) => t.name), ['Farmácia', 'Mercado']);
       expect(all.first.items.single.quantity, '1 cx');
@@ -315,7 +435,10 @@ void main() {
     });
 
     test('busca encontra eventos e respeita filtros de tarefa', () async {
-      await events.save(EventDraft(event: newEvent('Dentista', DateTime(2026, 11, 17, 14), DateTime(2026, 11, 17, 15))), now: now);
+      await events.save(
+        EventDraft(event: newEvent('Dentista', DateTime(2026, 11, 17, 14), DateTime(2026, 11, 17, 15))),
+        now: now,
+      );
       final s = SearchRepository(db);
       expect((await s.search(const SearchCriteria(text: 'dentista'), now)).events, hasLength(1));
       expect((await s.search(const SearchCriteria(text: 'dentista', priorities: {1}), now)).events, isEmpty);
@@ -324,7 +447,13 @@ void main() {
 
   group('backup', () {
     test('exporta e importa substituindo tudo', () async {
-      await tasks.save(TaskDraft(task: newTask('Backup', due: today), checklist: const [ChecklistItem(text: 'x')]), now: now);
+      await tasks.save(
+        TaskDraft(
+          task: newTask('Backup', due: today),
+          checklist: const [ChecklistItem(text: 'x')],
+        ),
+        now: now,
+      );
       final b = BackupService(db);
       final json = await b.exportJson(now: now);
       expect(BackupService.fileName(now), 'trilho-backup-2026-11-17.json');
@@ -349,8 +478,18 @@ void main() {
 
   group('ações da notificação (sem abrir o app)', () {
     test('Concluir e Adiar 1h', () async {
-      final a = await tasks.save(TaskDraft(task: newTask('A', due: today, min: 11 * 60)), now: now);
-      final b = await tasks.save(TaskDraft(task: newTask('B', due: today, min: 11 * 60)), now: now);
+      final a = await tasks.save(
+        TaskDraft(
+          task: newTask('A', due: today, min: 11 * 60),
+        ),
+        now: now,
+      );
+      final b = await tasks.save(
+        TaskDraft(
+          task: newTask('B', due: today, min: 11 * 60),
+        ),
+        now: now,
+      );
       final m1 = await applyNotificationAction(db, actionComplete, 'tarefa:$a', now);
       expect(m1!.$1, 'Concluída ✔');
       expect((await tasks.get(a))!.task.isDone, isTrue);

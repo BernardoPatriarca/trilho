@@ -14,11 +14,7 @@ class EventSeries {
 
 /// Ocorrências que tocam o intervalo [from]..[to] (datas inclusivas),
 /// ordenadas por início.
-List<EventOccurrence> expandEvents(
-  Iterable<EventSeries> series,
-  DateTime from,
-  DateTime to,
-) {
+List<EventOccurrence> expandEvents(Iterable<EventSeries> series, DateTime from, DateTime to) {
   final f = dateOnly(from);
   final t = dateOnly(to);
   final rangeEnd = addDays(t, 1); // exclusivo
@@ -36,8 +32,7 @@ List<EventOccurrence> expandEvents(
   return out;
 }
 
-Iterable<EventOccurrence> expandOne(
-    EventSeries s, DateTime f, DateTime t, DateTime rangeEnd) sync* {
+Iterable<EventOccurrence> expandOne(EventSeries s, DateTime f, DateTime t, DateTime rangeEnd) sync* {
   final e = s.event;
   final duration = e.duration;
   final spanDays = duration.inDays + 1;
@@ -62,14 +57,7 @@ Iterable<EventOccurrence> expandOne(
       if (ex.newTitle != null && ex.newTitle!.trim().isNotEmpty) title = ex.newTitle!;
       modified = true;
     }
-    final occ = EventOccurrence(
-      event: e,
-      start: start,
-      end: end,
-      occurrenceDate: d,
-      title: title,
-      modified: modified,
-    );
+    final occ = EventOccurrence(event: e, start: start, end: end, occurrenceDate: d, title: title, modified: modified);
     if (_overlaps(occ, f, rangeEnd)) yield occ;
   }
 }

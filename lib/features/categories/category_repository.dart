@@ -9,8 +9,7 @@ class CategoryRepository {
   final Database db;
 
   Future<List<Category>> all({bool includeInactive = true}) async {
-    final rows = await db.query('categoria',
-        where: includeInactive ? null : 'ativo = 1', orderBy: 'ordem, nome');
+    final rows = await db.query('categoria', where: includeInactive ? null : 'ativo = 1', orderBy: 'ordem, nome');
     return rows.map(Category.fromRow).toList();
   }
 
@@ -18,8 +17,11 @@ class CategoryRepository {
   Future<int> save(Category c) async {
     final name = c.name.trim();
     if (name.isEmpty) throw ArgumentError('Informe o nome da categoria.');
-    final clash = await db.query('categoria',
-        where: 'nome = ? COLLATE NOCASE AND id <> ?', whereArgs: [name, c.id ?? -1]);
+    final clash = await db.query(
+      'categoria',
+      where: 'nome = ? COLLATE NOCASE AND id <> ?',
+      whereArgs: [name, c.id ?? -1],
+    );
     if (clash.isNotEmpty) throw ArgumentError('Já existe uma categoria com esse nome.');
     final row = c.copyWith(name: name).toRow();
     if (c.id == null) {
@@ -35,18 +37,17 @@ class CategoryRepository {
       db.update('categoria', {'ativo': active ? 1 : 0}, where: 'id = ?', whereArgs: [id]);
 
   Future<void> reorder(List<int> ids) => db.transaction((txn) async {
-        for (final (i, id) in ids.indexed) {
-          await txn.update('categoria', {'ordem': i}, where: 'id = ?', whereArgs: [id]);
-        }
-      });
+    for (final (i, id) in ids.indexed) {
+      await txn.update('categoria', {'ordem': i}, where: 'id = ?', whereArgs: [id]);
+    }
+  });
 }
 
 class TagRepository {
   TagRepository(this.db);
   final Database db;
 
-  Future<List<Tag>> all() async =>
-      (await db.query('tag', orderBy: 'nome')).map(Tag.fromRow).toList();
+  Future<List<Tag>> all() async => (await db.query('tag', orderBy: 'nome')).map(Tag.fromRow).toList();
 
   /// Quantos itens usam cada tag.
   Future<Map<int, int>> usage() async {
@@ -80,14 +81,16 @@ class TagRepository {
 
   /// Move tudo de [fromId] para [intoId] e apaga [fromId].
   Future<void> merge(int fromId, int intoId) => db.transaction((txn) async {
-        await txn.rawInsert(
-            'INSERT OR IGNORE INTO tarefa_tag (tarefa_id, tag_id) SELECT tarefa_id, ? FROM tarefa_tag WHERE tag_id = ?',
-            [intoId, fromId]);
-        await txn.rawInsert(
-            'INSERT OR IGNORE INTO evento_tag (evento_id, tag_id) SELECT evento_id, ? FROM evento_tag WHERE tag_id = ?',
-            [intoId, fromId]);
-        await txn.delete('tag', where: 'id = ?', whereArgs: [fromId]);
-      });
+    await txn.rawInsert(
+      'INSERT OR IGNORE INTO tarefa_tag (tarefa_id, tag_id) SELECT tarefa_id, ? FROM tarefa_tag WHERE tag_id = ?',
+      [intoId, fromId],
+    );
+    await txn.rawInsert(
+      'INSERT OR IGNORE INTO evento_tag (evento_id, tag_id) SELECT evento_id, ? FROM evento_tag WHERE tag_id = ?',
+      [intoId, fromId],
+    );
+    await txn.delete('tag', where: 'id = ?', whereArgs: [fromId]);
+  });
 
   Future<void> delete(int id) => db.delete('tag', where: 'id = ?', whereArgs: [id]);
 }

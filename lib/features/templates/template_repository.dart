@@ -12,11 +12,11 @@ class TemplateRepository {
     final items = await db.query('modelo_checklist_item', orderBy: 'ordem, id');
     final byId = <int, List<ChecklistItem>>{};
     for (final r in items) {
-      byId.putIfAbsent(r['modelo_id'] as int, () => []).add(ChecklistItem(
-            text: r['texto'] as String,
-            quantity: r['quantidade'] as String?,
-            order: r['ordem'] as int,
-          ));
+      byId
+          .putIfAbsent(r['modelo_id'] as int, () => [])
+          .add(
+            ChecklistItem(text: r['texto'] as String, quantity: r['quantidade'] as String?, order: r['ordem'] as int),
+          );
     }
     return [
       for (final h in heads)
@@ -28,7 +28,11 @@ class TemplateRepository {
   Future<int> save(ChecklistTemplate t) async {
     final name = t.name.trim();
     if (name.isEmpty) throw ArgumentError('Informe o nome do modelo.');
-    final clash = await db.query('modelo_checklist', where: 'nome = ? COLLATE NOCASE AND id <> ?', whereArgs: [name, t.id ?? -1]);
+    final clash = await db.query(
+      'modelo_checklist',
+      where: 'nome = ? COLLATE NOCASE AND id <> ?',
+      whereArgs: [name, t.id ?? -1],
+    );
     if (clash.isNotEmpty) throw ArgumentError('Já existe um modelo com esse nome.');
     return db.transaction((txn) async {
       final id = t.id ?? await txn.insert('modelo_checklist', {'nome': name});

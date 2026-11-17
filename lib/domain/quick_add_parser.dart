@@ -56,15 +56,7 @@ class _Tok {
   final String norm;
 }
 
-const _weekdays = {
-  'segunda': 1,
-  'terca': 2,
-  'quarta': 3,
-  'quinta': 4,
-  'sexta': 5,
-  'sabado': 6,
-  'domingo': 7,
-};
+const _weekdays = {'segunda': 1, 'terca': 2, 'quarta': 3, 'quinta': 4, 'sexta': 5, 'sabado': 6, 'domingo': 7};
 
 int? _weekday(String norm) {
   final n = norm.replaceAll(RegExp(r'[.,;!?]+$'), '');
@@ -305,9 +297,7 @@ QuickAddResult parseQuickAdd(
     tags: tags,
     priority: priority,
     isEvent: isEvent,
-    tokens: [
-      ...tokens,
-    ],
+    tokens: [...tokens],
   );
 }
 
@@ -353,8 +343,7 @@ DateTime? _parseDayMonth(String w, DateTime today) {
 
 /// 18h, 18h30, 9h30, 18:30. Com [bare], aceita número solto ("às 9").
 int? _parseTime(String w, {bool bare = false}) {
-  var m = RegExp(r'^(\d{1,2})h(\d{2})?$').firstMatch(w) ??
-      RegExp(r'^(\d{1,2}):(\d{2})h?$').firstMatch(w);
+  var m = RegExp(r'^(\d{1,2})h(\d{2})?$').firstMatch(w) ?? RegExp(r'^(\d{1,2}):(\d{2})h?$').firstMatch(w);
   if (m == null && bare) m = RegExp(r'^(\d{1,2})()$').firstMatch(w);
   if (m == null) return null;
   final h = int.parse(m.group(1)!);

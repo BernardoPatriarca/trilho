@@ -44,7 +44,12 @@ class TaskDraft {
 
 /// Tudo o que as listas precisam, numa leitura só.
 class TaskListData {
-  const TaskListData({this.tasks = const [], this.progress = const {}, this.tagIds = const {}, this.recurrenceRules = const {}});
+  const TaskListData({
+    this.tasks = const [],
+    this.progress = const {},
+    this.tagIds = const {},
+    this.recurrenceRules = const {},
+  });
   final List<Task> tasks;
   final Map<int, ChecklistProgress> progress;
   final Map<int, Set<int>> tagIds;
@@ -77,19 +82,19 @@ class TaskRepository {
     final rows = await db.query('tarefa');
     final tasks = rows.map(Task.fromRow).toList();
     final prog = await db.rawQuery(
-        'SELECT tarefa_id, SUM(marcado) AS m, COUNT(*) AS n FROM checklist_item GROUP BY tarefa_id');
+      'SELECT tarefa_id, SUM(marcado) AS m, COUNT(*) AS n FROM checklist_item GROUP BY tarefa_id',
+    );
     final tagRows = await db.query('tarefa_tag');
     final tagIds = <int, Set<int>>{};
     for (final r in tagRows) {
       tagIds.putIfAbsent(r['tarefa_id'] as int, () => {}).add(r['tag_id'] as int);
     }
     final rules = await db.rawQuery(
-        'SELECT r.* FROM recorrencia r WHERE r.id IN (SELECT recorrencia_id FROM tarefa WHERE recorrencia_id IS NOT NULL)');
+      'SELECT r.* FROM recorrencia r WHERE r.id IN (SELECT recorrencia_id FROM tarefa WHERE recorrencia_id IS NOT NULL)',
+    );
     return TaskListData(
       tasks: tasks,
-      progress: {
-        for (final r in prog) r['tarefa_id'] as int: ChecklistProgress((r['m'] as int?) ?? 0, r['n'] as int),
-      },
+      progress: {for (final r in prog) r['tarefa_id'] as int: ChecklistProgress((r['m'] as int?) ?? 0, r['n'] as int)},
       tagIds: tagIds,
       recurrenceRules: {for (final r in rules) r['id'] as int: RecurrenceRule.fromRow(r)},
     );
@@ -109,23 +114,27 @@ class TaskRepository {
       task: task,
       checklist: await checklist(id),
       tags: (await db.rawQuery(
-              'SELECT t.* FROM tag t JOIN tarefa_tag tt ON tt.tag_id = t.id WHERE tt.tarefa_id = ? ORDER BY t.nome', [id]))
-          .map(Tag.fromRow)
-          .toList(),
+        'SELECT t.* FROM tag t JOIN tarefa_tag tt ON tt.tag_id = t.id WHERE tt.tarefa_id = ? ORDER BY t.nome',
+        [id],
+      )).map(Tag.fromRow).toList(),
       reminders: await reminders(id),
       rule: task.recurrenceId == null ? null : await _rule(db, task.recurrenceId!),
     );
   }
 
-  Future<List<ChecklistItem>> checklist(int taskId, {DatabaseExecutor? txn}) async =>
-      (await (txn ?? db).query('checklist_item', where: 'tarefa_id = ?', whereArgs: [taskId], orderBy: 'ordem, id'))
-          .map(ChecklistItem.fromRow)
-          .toList();
+  Future<List<ChecklistItem>> checklist(int taskId, {DatabaseExecutor? txn}) async => (await (txn ?? db).query(
+    'checklist_item',
+    where: 'tarefa_id = ?',
+    whereArgs: [taskId],
+    orderBy: 'ordem, id',
+  )).map(ChecklistItem.fromRow).toList();
 
-  Future<List<Reminder>> reminders(int taskId, {DatabaseExecutor? txn}) async =>
-      (await (txn ?? db).query('lembrete', where: "alvo_tipo = 'tarefa' AND alvo_id = ?", whereArgs: [taskId], orderBy: 'id'))
-          .map(Reminder.fromRow)
-          .toList();
+  Future<List<Reminder>> reminders(int taskId, {DatabaseExecutor? txn}) async => (await (txn ?? db).query(
+    'lembrete',
+    where: "alvo_tipo = 'tarefa' AND alvo_id = ?",
+    whereArgs: [taskId],
+    orderBy: 'id',
+  )).map(Reminder.fromRow).toList();
 
   Future<RecurrenceRule?> _rule(DatabaseExecutor ex, int id) async {
     final r = await ex.query('recorrencia', where: 'id = ?', whereArgs: [id]);
@@ -135,7 +144,8 @@ class TaskRepository {
   /// Salva a tarefa inteira. Retorna o id. Lança [ValidationException].
   Future<int> save(TaskDraft d, {required DateTime now}) async {
     final t = d.task;
-    final error = validateTask(title: t.title, dueDate: t.dueDate, dueMinutes: t.dueMinutes, rule: d.rule) ??
+    final error =
+        validateTask(title: t.title, dueDate: t.dueDate, dueMinutes: t.dueMinutes, rule: d.rule) ??
         (t.dueDate == null ? null : validateRule(d.rule, t.dueDate!));
     if (error != null) throw ValidationException(error);
 
@@ -195,8 +205,11 @@ class TaskRepository {
     if (keep.isEmpty) {
       await txn.delete('checklist_item', where: 'tarefa_id = ?', whereArgs: [taskId]);
     } else {
-      await txn.delete('checklist_item',
-          where: 'tarefa_id = ? AND id NOT IN (${List.filled(keep.length, '?').join(',')})', whereArgs: [taskId, ...keep]);
+      await txn.delete(
+        'checklist_item',
+        where: 'tarefa_id = ? AND id NOT IN (${List.filled(keep.length, '?').join(',')})',
+        whereArgs: [taskId, ...keep],
+      );
     }
     for (final (i, it) in items.indexed) {
       final row = {
@@ -228,82 +241,97 @@ class TaskRepository {
 
   Future<void> _deleteRuleIfUnused(DatabaseExecutor ex, int ruleId) async {
     final used = await ex.rawQuery(
-        'SELECT (SELECT COUNT(*) FROM tarefa WHERE recorrencia_id = ?) + (SELECT COUNT(*) FROM evento WHERE recorrencia_id = ?) AS n',
-        [ruleId, ruleId]);
+      'SELECT (SELECT COUNT(*) FROM tarefa WHERE recorrencia_id = ?) + (SELECT COUNT(*) FROM evento WHERE recorrencia_id = ?) AS n',
+      [ruleId, ruleId],
+    );
     if ((used.first['n'] as int) == 0) await ex.delete('recorrencia', where: 'id = ?', whereArgs: [ruleId]);
   }
 
   /// Conclui. Se for recorrente, cria a próxima instância (prazo calculado a
   /// partir do prazo original, checklist desmarcada, tags e lembretes copiados).
   Future<CompletionResult> complete(int id, DateTime now) => db.transaction((txn) async {
-        final rows = await txn.query('tarefa', where: 'id = ?', whereArgs: [id]);
-        if (rows.isEmpty) throw ValidationException('Tarefa não encontrada.');
-        final before = Task.fromRow(rows.first);
-        if (!before.isPending) return CompletionResult(before: before);
-        await txn.update(
-            'tarefa',
-            {'status': TaskStatus.concluida.name, 'concluida_em': toIsoDateTime(now), 'atualizada_em': toIsoDateTime(now), 'fixada_hoje': 0},
-            where: 'id = ?',
-            whereArgs: [id]);
+    final rows = await txn.query('tarefa', where: 'id = ?', whereArgs: [id]);
+    if (rows.isEmpty) throw ValidationException('Tarefa não encontrada.');
+    final before = Task.fromRow(rows.first);
+    if (!before.isPending) return CompletionResult(before: before);
+    await txn.update(
+      'tarefa',
+      {
+        'status': TaskStatus.concluida.name,
+        'concluida_em': toIsoDateTime(now),
+        'atualizada_em': toIsoDateTime(now),
+        'fixada_hoje': 0,
+      },
+      where: 'id = ?',
+      whereArgs: [id],
+    );
 
-        int? nextId;
-        final rule = before.recurrenceId == null ? null : await _rule(txn, before.recurrenceId!);
-        if (rule != null) {
-          final nextDue = nextDueDate(before, rule);
-          if (nextDue != null) {
-            final newRuleId = await txn.insert('recorrencia', nextInstanceRule(rule).toRow());
-            final next = nextInstance(before, nextDue, now, newRuleId);
-            final items = resetChecklist(await checklist(id, txn: txn));
-            final busca = (await txn.query('tarefa', columns: ['busca'], where: 'id = ?', whereArgs: [id])).first['busca'];
-            nextId = await txn.insert('tarefa', next.toRow()..['busca'] = busca);
-            for (final it in items) {
-              await txn.insert('checklist_item', {
-                'tarefa_id': nextId,
-                'texto': it.text,
-                'quantidade': it.quantity,
-                'marcado': 0,
-                'ordem': it.order,
-              });
-            }
-            await txn.rawInsert('INSERT INTO tarefa_tag (tarefa_id, tag_id) SELECT ?, tag_id FROM tarefa_tag WHERE tarefa_id = ?',
-                [nextId, id]);
-            final rem = shiftReminders(await reminders(id, txn: txn), before.dueDate!, nextDue);
-            await _replaceReminders(txn, TargetType.tarefa, nextId, rem);
-          }
+    int? nextId;
+    final rule = before.recurrenceId == null ? null : await _rule(txn, before.recurrenceId!);
+    if (rule != null) {
+      final nextDue = nextDueDate(before, rule);
+      if (nextDue != null) {
+        final newRuleId = await txn.insert('recorrencia', nextInstanceRule(rule).toRow());
+        final next = nextInstance(before, nextDue, now, newRuleId);
+        final items = resetChecklist(await checklist(id, txn: txn));
+        final busca = (await txn.query('tarefa', columns: ['busca'], where: 'id = ?', whereArgs: [id])).first['busca'];
+        nextId = await txn.insert('tarefa', next.toRow()..['busca'] = busca);
+        for (final it in items) {
+          await txn.insert('checklist_item', {
+            'tarefa_id': nextId,
+            'texto': it.text,
+            'quantidade': it.quantity,
+            'marcado': 0,
+            'ordem': it.order,
+          });
         }
-        return CompletionResult(before: before, nextId: nextId);
-      });
+        await txn.rawInsert(
+          'INSERT INTO tarefa_tag (tarefa_id, tag_id) SELECT ?, tag_id FROM tarefa_tag WHERE tarefa_id = ?',
+          [nextId, id],
+        );
+        final rem = shiftReminders(await reminders(id, txn: txn), before.dueDate!, nextDue);
+        await _replaceReminders(txn, TargetType.tarefa, nextId, rem);
+      }
+    }
+    return CompletionResult(before: before, nextId: nextId);
+  });
 
   /// Desfaz uma conclusão (inclusive a próxima instância criada).
   Future<void> undoComplete(CompletionResult r) => db.transaction((txn) async {
-        if (r.nextId != null) {
-          final rec = await txn.query('tarefa', columns: ['recorrencia_id'], where: 'id = ?', whereArgs: [r.nextId]);
-          await txn.delete('lembrete', where: "alvo_tipo = 'tarefa' AND alvo_id = ?", whereArgs: [r.nextId]);
-          await txn.delete('tarefa', where: 'id = ?', whereArgs: [r.nextId]);
-          final recId = rec.isEmpty ? null : rec.first['recorrencia_id'] as int?;
-          if (recId != null) await _deleteRuleIfUnused(txn, recId);
-        }
-        await txn.update('tarefa', _statusRow(r.before), where: 'id = ?', whereArgs: [r.before.id]);
-      });
+    if (r.nextId != null) {
+      final rec = await txn.query('tarefa', columns: ['recorrencia_id'], where: 'id = ?', whereArgs: [r.nextId]);
+      await txn.delete('lembrete', where: "alvo_tipo = 'tarefa' AND alvo_id = ?", whereArgs: [r.nextId]);
+      await txn.delete('tarefa', where: 'id = ?', whereArgs: [r.nextId]);
+      final recId = rec.isEmpty ? null : rec.first['recorrencia_id'] as int?;
+      if (recId != null) await _deleteRuleIfUnused(txn, recId);
+    }
+    await txn.update('tarefa', _statusRow(r.before), where: 'id = ?', whereArgs: [r.before.id]);
+  });
 
   Map<String, Object?> _statusRow(Task t) => {
-        'status': t.status.name,
-        'concluida_em': t.completedAt == null ? null : toIsoDateTime(t.completedAt!),
-        'atualizada_em': toIsoDateTime(t.updatedAt),
-        'fixada_hoje': t.pinnedToday ? 1 : 0,
-        'data_prazo': t.dueDate == null ? null : toIsoDate(t.dueDate!),
-        'hora_prazo': t.dueDate == null || t.dueMinutes == null ? null : minutesToHm(t.dueMinutes!),
-        'adiamentos': t.postponements,
-      };
+    'status': t.status.name,
+    'concluida_em': t.completedAt == null ? null : toIsoDateTime(t.completedAt!),
+    'atualizada_em': toIsoDateTime(t.updatedAt),
+    'fixada_hoje': t.pinnedToday ? 1 : 0,
+    'data_prazo': t.dueDate == null ? null : toIsoDate(t.dueDate!),
+    'hora_prazo': t.dueDate == null || t.dueMinutes == null ? null : minutesToHm(t.dueMinutes!),
+    'adiamentos': t.postponements,
+  };
 
   /// Reabre uma tarefa concluída ou cancelada.
   Future<void> reopen(int id, DateTime now) => db.update(
-      'tarefa', {'status': TaskStatus.pendente.name, 'concluida_em': null, 'atualizada_em': toIsoDateTime(now)},
-      where: 'id = ?', whereArgs: [id]);
+    'tarefa',
+    {'status': TaskStatus.pendente.name, 'concluida_em': null, 'atualizada_em': toIsoDateTime(now)},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
 
   Future<void> cancel(int id, DateTime now) => db.update(
-      'tarefa', {'status': TaskStatus.cancelada.name, 'atualizada_em': toIsoDateTime(now), 'fixada_hoje': 0},
-      where: 'id = ?', whereArgs: [id]);
+    'tarefa',
+    {'status': TaskStatus.cancelada.name, 'atualizada_em': toIsoDateTime(now), 'fixada_hoje': 0},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
 
   /// Novo prazo (regra 4). Retorna a tarefa como era, para desfazer.
   Future<Task> postponeTo(int id, DateTime date, int? minutes, DateTime now) async {
@@ -315,8 +343,7 @@ class TaskRepository {
   }
 
   /// Volta prazo, status e adiamentos ao estado de [before] (desfazer).
-  Future<void> restore(Task before) =>
-      db.update('tarefa', _statusRow(before), where: 'id = ?', whereArgs: [before.id]);
+  Future<void> restore(Task before) => db.update('tarefa', _statusRow(before), where: 'id = ?', whereArgs: [before.id]);
 
   /// "Reagendar tudo para hoje": atrasadas vão para hoje (a hora some se já
   /// passou, para não continuarem atrasadas). Retorna as tarefas antes.
@@ -334,36 +361,40 @@ class TaskRepository {
   }
 
   Future<void> restoreAll(List<Task> before) => db.transaction((txn) async {
-        for (final t in before) {
-          await txn.update('tarefa', _statusRow(t), where: 'id = ?', whereArgs: [t.id]);
-        }
-      });
+    for (final t in before) {
+      await txn.update('tarefa', _statusRow(t), where: 'id = ?', whereArgs: [t.id]);
+    }
+  });
 
   Future<void> setPinned(int id, bool pinned, DateTime now) => db.update(
-      'tarefa', {'fixada_hoje': pinned ? 1 : 0, 'atualizada_em': toIsoDateTime(now)},
-      where: 'id = ?', whereArgs: [id]);
+    'tarefa',
+    {'fixada_hoje': pinned ? 1 : 0, 'atualizada_em': toIsoDateTime(now)},
+    where: 'id = ?',
+    whereArgs: [id],
+  );
 
   /// Marca/desmarca um item já salvo. Retorna o progresso novo da tarefa.
   Future<ChecklistProgress> setItemChecked(int itemId, bool checked) async {
     await db.update('checklist_item', {'marcado': checked ? 1 : 0}, where: 'id = ?', whereArgs: [itemId]);
     final r = await db.rawQuery(
-        'SELECT SUM(marcado) AS m, COUNT(*) AS n FROM checklist_item WHERE tarefa_id = (SELECT tarefa_id FROM checklist_item WHERE id = ?)',
-        [itemId]);
+      'SELECT SUM(marcado) AS m, COUNT(*) AS n FROM checklist_item WHERE tarefa_id = (SELECT tarefa_id FROM checklist_item WHERE id = ?)',
+      [itemId],
+    );
     return ChecklistProgress((r.first['m'] as int?) ?? 0, (r.first['n'] as int?) ?? 0);
   }
 
   /// Ordem manual (lista arrastada).
   Future<void> reorder(List<int> ids) => db.transaction((txn) async {
-        for (final (i, id) in ids.indexed) {
-          await txn.update('tarefa', {'ordem': i + 1}, where: 'id = ?', whereArgs: [id]);
-        }
-      });
+    for (final (i, id) in ids.indexed) {
+      await txn.update('tarefa', {'ordem': i + 1}, where: 'id = ?', whereArgs: [id]);
+    }
+  });
 
   Future<void> delete(int id) => db.transaction((txn) async {
-        final rows = await txn.query('tarefa', columns: ['recorrencia_id'], where: 'id = ?', whereArgs: [id]);
-        await txn.delete('lembrete', where: "alvo_tipo = 'tarefa' AND alvo_id = ?", whereArgs: [id]);
-        await txn.delete('tarefa', where: 'id = ?', whereArgs: [id]);
-        final recId = rows.isEmpty ? null : rows.first['recorrencia_id'] as int?;
-        if (recId != null) await _deleteRuleIfUnused(txn, recId);
-      });
+    final rows = await txn.query('tarefa', columns: ['recorrencia_id'], where: 'id = ?', whereArgs: [id]);
+    await txn.delete('lembrete', where: "alvo_tipo = 'tarefa' AND alvo_id = ?", whereArgs: [id]);
+    await txn.delete('tarefa', where: 'id = ?', whereArgs: [id]);
+    final recId = rows.isEmpty ? null : rows.first['recorrencia_id'] as int?;
+    if (recId != null) await _deleteRuleIfUnused(txn, recId);
+  });
 }

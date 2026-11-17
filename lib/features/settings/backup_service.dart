@@ -59,7 +59,9 @@ class BackupService {
     final v = data['schema_version'];
     if (v is! int) throw BackupException('Backup sem versão de schema.');
     if (v > schemaVersion) {
-      throw BackupException('Backup feito numa versão mais nova do app (schema $v). Atualize o Trilho antes de importar.');
+      throw BackupException(
+        'Backup feito numa versão mais nova do app (schema $v). Atualize o Trilho antes de importar.',
+      );
     }
     if (v < 1) throw BackupException('Versão de schema inválida ($v).');
     final tables = data['tabelas'];

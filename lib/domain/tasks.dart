@@ -32,29 +32,27 @@ DateTime? nextDueDate(Task t, RecurrenceRule rule) {
 
 /// Regra da próxima instância: a nova tarefa herda tudo, com prazo novo.
 /// A contagem restante diminui em 1 (a regra é copiada para a instância nova).
-RecurrenceRule nextInstanceRule(RecurrenceRule rule) => rule.count == null
-    ? rule.withoutId()
-    : rule.withoutId().copyWith(count: rule.count! - 1);
+RecurrenceRule nextInstanceRule(RecurrenceRule rule) =>
+    rule.count == null ? rule.withoutId() : rule.withoutId().copyWith(count: rule.count! - 1);
 
 Task nextInstance(Task t, DateTime nextDue, DateTime now, int recurrenceId) => Task(
-      title: t.title,
-      description: t.description,
-      categoryId: t.categoryId,
-      priority: t.priority,
-      dueDate: nextDue,
-      dueMinutes: t.dueMinutes,
-      createdAt: now,
-      updatedAt: now,
-      estimateMin: t.estimateMin,
-      recurrenceId: recurrenceId,
-      order: t.order,
-    );
+  title: t.title,
+  description: t.description,
+  categoryId: t.categoryId,
+  priority: t.priority,
+  dueDate: nextDue,
+  dueMinutes: t.dueMinutes,
+  createdAt: now,
+  updatedAt: now,
+  estimateMin: t.estimateMin,
+  recurrenceId: recurrenceId,
+  order: t.order,
+);
 
 /// Checklist copiada com **todos os itens desmarcados**.
 List<ChecklistItem> resetChecklist(List<ChecklistItem> items) => [
-      for (final (i, it) in items.indexed)
-        ChecklistItem(text: it.text, quantity: it.quantity, checked: false, order: i),
-    ];
+  for (final (i, it) in items.indexed) ChecklistItem(text: it.text, quantity: it.quantity, checked: false, order: i),
+];
 
 /// Lembretes copiados para a próxima instância. Relativos continuam iguais;
 /// absolutos andam junto com o prazo.
@@ -79,7 +77,9 @@ class PostponeOption {
 List<PostponeOption> postponeOptions(Task t, DateTime now, {int defaultMinutes = 60}) {
   final opts = <PostponeOption>[];
   final plus = now.add(Duration(minutes: defaultMinutes));
-  final plusLabel = defaultMinutes % 60 == 0 ? '+${defaultMinutes ~/ 60} hora${defaultMinutes == 60 ? '' : 's'}' : '+$defaultMinutes min';
+  final plusLabel = defaultMinutes % 60 == 0
+      ? '+${defaultMinutes ~/ 60} hora${defaultMinutes == 60 ? '' : 's'}'
+      : '+$defaultMinutes min';
   opts.add(PostponeOption(plusLabel, dateOnly(plus), minutesOfDay(plus)));
   if (now.hour < 19) {
     opts.add(PostponeOption('Hoje à noite (19h)', dateOnly(now), 19 * 60));

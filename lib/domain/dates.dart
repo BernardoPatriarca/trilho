@@ -10,8 +10,7 @@ String _two(int n) => n.toString().padLeft(2, '0');
 DateTime dateOnly(DateTime d) => DateTime(d.year, d.month, d.day);
 
 /// `AAAA-MM-DD`
-String toIsoDate(DateTime d) =>
-    '${d.year.toString().padLeft(4, '0')}-${_two(d.month)}-${_two(d.day)}';
+String toIsoDate(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${_two(d.month)}-${_two(d.day)}';
 
 DateTime fromIsoDate(String s) {
   final p = s.substring(0, 10).split('-');
@@ -19,8 +18,7 @@ DateTime fromIsoDate(String s) {
 }
 
 /// `AAAA-MM-DDTHH:mm`
-String toIsoDateTime(DateTime d) =>
-    '${toIsoDate(d)}T${_two(d.hour)}:${_two(d.minute)}';
+String toIsoDateTime(DateTime d) => '${toIsoDate(d)}T${_two(d.hour)}:${_two(d.minute)}';
 
 /// Aceita `AAAA-MM-DD` (meia-noite) ou `AAAA-MM-DDTHH:mm[:ss]`.
 DateTime fromIsoDateTime(String s) {
@@ -46,23 +44,18 @@ int? hmToMinutes(String? s) {
 }
 
 /// Data + minutos do dia.
-DateTime atMinutes(DateTime day, int minutes) =>
-    DateTime(day.year, day.month, day.day, minutes ~/ 60, minutes % 60);
+DateTime atMinutes(DateTime day, int minutes) => DateTime(day.year, day.month, day.day, minutes ~/ 60, minutes % 60);
 
 int minutesOfDay(DateTime d) => d.hour * 60 + d.minute;
 
 /// Soma dias de calendário (seguro em mudanças de horário de verão).
-DateTime addDays(DateTime d, int days) =>
-    DateTime(d.year, d.month, d.day + days, d.hour, d.minute);
+DateTime addDays(DateTime d, int days) => DateTime(d.year, d.month, d.day + days, d.hour, d.minute);
 
-bool isSameDay(DateTime a, DateTime b) =>
-    a.year == b.year && a.month == b.month && a.day == b.day;
+bool isSameDay(DateTime a, DateTime b) => a.year == b.year && a.month == b.month && a.day == b.day;
 
 /// Diferença em dias de calendário (b − a).
 int daysBetween(DateTime a, DateTime b) =>
-    DateTime.utc(b.year, b.month, b.day)
-        .difference(DateTime.utc(a.year, a.month, a.day))
-        .inDays;
+    DateTime.utc(b.year, b.month, b.day).difference(DateTime.utc(a.year, a.month, a.day)).inDays;
 
 int daysInMonth(int year, int month) => DateTime(year, month + 1, 0).day;
 
@@ -86,31 +79,8 @@ DateTime nextWeekday(DateTime from, int weekday) {
 
 /// Nomes curtos dos dias (1 = segunda).
 const weekdayShort = ['', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
-const weekdayLong = [
-  '',
-  'segunda',
-  'terça',
-  'quarta',
-  'quinta',
-  'sexta',
-  'sábado',
-  'domingo',
-];
-const monthShort = [
-  '',
-  'jan',
-  'fev',
-  'mar',
-  'abr',
-  'mai',
-  'jun',
-  'jul',
-  'ago',
-  'set',
-  'out',
-  'nov',
-  'dez',
-];
+const weekdayLong = ['', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
+const monthShort = ['', 'jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
 /// `dd/mm`
 String dayMonth(DateTime d) => '${_two(d.day)}/${_two(d.month)}';

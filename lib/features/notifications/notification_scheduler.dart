@@ -35,7 +35,14 @@ class SyncReport {
 
 /// Linha da tabela, para a tela de diagnóstico.
 class ScheduledRow {
-  const ScheduledRow({required this.id, required this.kind, required this.fireAt, this.title, this.targetType, this.targetId});
+  const ScheduledRow({
+    required this.id,
+    required this.kind,
+    required this.fireAt,
+    this.title,
+    this.targetType,
+    this.targetId,
+  });
   final int id;
   final String kind;
   final DateTime fireAt;
@@ -62,7 +69,9 @@ class NotificationScheduler {
       remindersByTask.putIfAbsent(rem.targetId!, () => []).add(rem);
     }
     final progress = <int, ChecklistProgress>{
-      for (final r in await db.rawQuery('SELECT tarefa_id, SUM(marcado) AS m, COUNT(*) AS n FROM checklist_item GROUP BY tarefa_id'))
+      for (final r in await db.rawQuery(
+        'SELECT tarefa_id, SUM(marcado) AS m, COUNT(*) AS n FROM checklist_item GROUP BY tarefa_id',
+      ))
         r['tarefa_id'] as int: ChecklistProgress((r['m'] as int?) ?? 0, r['n'] as int),
     };
 
@@ -129,7 +138,9 @@ class NotificationScheduler {
     final closedTasks = {
       for (final r in await db.query('tarefa', columns: ['id'], where: "status <> 'pendente'")) r['id'] as int,
     };
-    final existingTasks = {for (final r in await db.query('tarefa', columns: ['id'])) r['id'] as int};
+    final existingTasks = {
+      for (final r in await db.query('tarefa', columns: ['id'])) r['id'] as int,
+    };
 
     for (final r in rows) {
       final id = r['notification_id'] as int;
@@ -179,15 +190,15 @@ class NotificationScheduler {
   }
 
   Map<String, Object?> _row(PlannedNotification n, bool exact) => {
-        'notification_id': n.id,
-        'tipo': n.kind.name,
-        'alvo_tipo': n.targetType?.name,
-        'alvo_id': n.targetId,
-        'ocorrencia': n.occurrence == null ? null : toIsoDate(n.occurrence!),
-        'dispara_em': toIsoDateTime(n.fireAt),
-        'titulo': n.title,
-        'assinatura': n.signature(exact: exact),
-      };
+    'notification_id': n.id,
+    'tipo': n.kind.name,
+    'alvo_tipo': n.targetType?.name,
+    'alvo_id': n.targetId,
+    'ocorrencia': n.occurrence == null ? null : toIsoDate(n.occurrence!),
+    'dispara_em': toIsoDateTime(n.fireAt),
+    'titulo': n.title,
+    'assinatura': n.signature(exact: exact),
+  };
 
   /// "Reagendar tudo": cancela todas e agenda de novo.
   Future<SyncReport> rescheduleAll() async {
@@ -217,8 +228,13 @@ class NotificationScheduler {
   }
 
   Future<List<ScheduledRow>> upcoming({int limit = 100}) async {
-    final rows = await db.query('notificacao_agendada',
-        where: 'dispara_em > ?', whereArgs: [toIsoDateTime(clock())], orderBy: 'dispara_em', limit: limit);
+    final rows = await db.query(
+      'notificacao_agendada',
+      where: 'dispara_em > ?',
+      whereArgs: [toIsoDateTime(clock())],
+      orderBy: 'dispara_em',
+      limit: limit,
+    );
     return [
       for (final r in rows)
         ScheduledRow(
@@ -233,5 +249,8 @@ class NotificationScheduler {
   }
 
   Future<int> scheduledCount() async =>
-      (await db.rawQuery('SELECT COUNT(*) AS n FROM notificacao_agendada WHERE dispara_em > ?', [toIsoDateTime(clock())])).first['n'] as int;
+      (await db.rawQuery('SELECT COUNT(*) AS n FROM notificacao_agendada WHERE dispara_em > ?', [
+            toIsoDateTime(clock()),
+          ])).first['n']
+          as int;
 }

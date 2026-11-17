@@ -26,8 +26,13 @@ void main() {
     expect(r.priority, 2);
     expect(r.categoryId, 7);
     expect(r.isEvent, isFalse);
-    expect(r.tokens.map((t) => t.kind).toSet(),
-        {TokenKind.date, TokenKind.time, TokenKind.tag, TokenKind.priority, TokenKind.category});
+    expect(r.tokens.map((t) => t.kind).toSet(), {
+      TokenKind.date,
+      TokenKind.time,
+      TokenKind.tag,
+      TokenKind.priority,
+      TokenKind.category,
+    });
   });
 
   test('texto simples vira só título', () {

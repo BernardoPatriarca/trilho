@@ -6,14 +6,13 @@ enum TaskStatus {
   concluida,
   cancelada;
 
-  static TaskStatus parse(String s) =>
-      TaskStatus.values.firstWhere((v) => v.name == s, orElse: () => pendente);
+  static TaskStatus parse(String s) => TaskStatus.values.firstWhere((v) => v.name == s, orElse: () => pendente);
 
   String get label => switch (this) {
-        pendente => 'Pendente',
-        concluida => 'Concluída',
-        cancelada => 'Cancelada',
-      };
+    pendente => 'Pendente',
+    concluida => 'Concluída',
+    cancelada => 'Cancelada',
+  };
 }
 
 enum TargetType {
@@ -45,31 +44,24 @@ class Category {
   final bool active;
 
   factory Category.fromRow(Map<String, Object?> r) => Category(
-        id: r['id'] as int,
-        name: r['nome'] as String,
-        color: r['cor'] as String,
-        icon: r['icone'] as String,
-        order: r['ordem'] as int,
-        active: (r['ativo'] as int) == 1,
-      );
+    id: r['id'] as int,
+    name: r['nome'] as String,
+    color: r['cor'] as String,
+    icon: r['icone'] as String,
+    order: r['ordem'] as int,
+    active: (r['ativo'] as int) == 1,
+  );
 
-  Map<String, Object?> toRow() => {
-        'nome': name,
-        'cor': color,
-        'icone': icon,
-        'ordem': order,
-        'ativo': active ? 1 : 0,
-      };
+  Map<String, Object?> toRow() => {'nome': name, 'cor': color, 'icone': icon, 'ordem': order, 'ativo': active ? 1 : 0};
 
-  Category copyWith({String? name, String? color, String? icon, int? order, bool? active}) =>
-      Category(
-        id: id,
-        name: name ?? this.name,
-        color: color ?? this.color,
-        icon: icon ?? this.icon,
-        order: order ?? this.order,
-        active: active ?? this.active,
-      );
+  Category copyWith({String? name, String? color, String? icon, int? order, bool? active}) => Category(
+    id: id,
+    name: name ?? this.name,
+    color: color ?? this.color,
+    icon: icon ?? this.icon,
+    order: order ?? this.order,
+    active: active ?? this.active,
+  );
 }
 
 class Tag {
@@ -91,11 +83,11 @@ enum Freq {
   static Freq parse(String s) => Freq.values.firstWhere((f) => f.name == s);
 
   String get label => switch (this) {
-        diaria => 'Diária',
-        semanal => 'Semanal',
-        mensal => 'Mensal',
-        anual => 'Anual',
-      };
+    diaria => 'Diária',
+    semanal => 'Semanal',
+    mensal => 'Mensal',
+    anual => 'Anual',
+  };
 }
 
 enum MonthlyMode {
@@ -108,8 +100,7 @@ enum MonthlyMode {
   const MonthlyMode(this.db);
   final String db;
 
-  static MonthlyMode? parse(String? s) =>
-      s == null ? null : MonthlyMode.values.firstWhere((m) => m.db == s);
+  static MonthlyMode? parse(String? s) => s == null ? null : MonthlyMode.values.firstWhere((m) => m.db == s);
 }
 
 /// Regra de recorrência (tabela `recorrencia`).
@@ -141,27 +132,23 @@ class RecurrenceRule {
   final int? count;
 
   factory RecurrenceRule.fromRow(Map<String, Object?> r) => RecurrenceRule(
-        id: r['id'] as int,
-        freq: Freq.parse(r['freq'] as String),
-        interval: r['intervalo'] as int,
-        weekdays: ((r['dias_semana'] as String?) ?? '')
-            .split(',')
-            .where((s) => s.isNotEmpty)
-            .map(int.parse)
-            .toList(),
-        monthlyMode: MonthlyMode.parse(r['modo_mensal'] as String?),
-        until: r['ate'] == null ? null : fromIsoDate(r['ate'] as String),
-        count: r['contagem'] as int?,
-      );
+    id: r['id'] as int,
+    freq: Freq.parse(r['freq'] as String),
+    interval: r['intervalo'] as int,
+    weekdays: ((r['dias_semana'] as String?) ?? '').split(',').where((s) => s.isNotEmpty).map(int.parse).toList(),
+    monthlyMode: MonthlyMode.parse(r['modo_mensal'] as String?),
+    until: r['ate'] == null ? null : fromIsoDate(r['ate'] as String),
+    count: r['contagem'] as int?,
+  );
 
   Map<String, Object?> toRow() => {
-        'freq': freq.name,
-        'intervalo': interval,
-        'dias_semana': weekdays.isEmpty ? null : (weekdays.toList()..sort()).join(','),
-        'modo_mensal': freq == Freq.mensal ? (monthlyMode ?? MonthlyMode.diaDoMes).db : null,
-        'ate': until == null ? null : toIsoDate(until!),
-        'contagem': count,
-      };
+    'freq': freq.name,
+    'intervalo': interval,
+    'dias_semana': weekdays.isEmpty ? null : (weekdays.toList()..sort()).join(','),
+    'modo_mensal': freq == Freq.mensal ? (monthlyMode ?? MonthlyMode.diaDoMes).db : null,
+    'ate': until == null ? null : toIsoDate(until!),
+    'contagem': count,
+  };
 
   RecurrenceRule copyWith({
     int? id,
@@ -173,25 +160,24 @@ class RecurrenceRule {
     bool clearUntil = false,
     int? count,
     bool clearCount = false,
-  }) =>
-      RecurrenceRule(
-        id: id ?? this.id,
-        freq: freq ?? this.freq,
-        interval: interval ?? this.interval,
-        weekdays: weekdays ?? this.weekdays,
-        monthlyMode: monthlyMode ?? this.monthlyMode,
-        until: clearUntil ? null : (until ?? this.until),
-        count: clearCount ? null : (count ?? this.count),
-      );
+  }) => RecurrenceRule(
+    id: id ?? this.id,
+    freq: freq ?? this.freq,
+    interval: interval ?? this.interval,
+    weekdays: weekdays ?? this.weekdays,
+    monthlyMode: monthlyMode ?? this.monthlyMode,
+    until: clearUntil ? null : (until ?? this.until),
+    count: clearCount ? null : (count ?? this.count),
+  );
 
   RecurrenceRule withoutId() => RecurrenceRule(
-        freq: freq,
-        interval: interval,
-        weekdays: weekdays,
-        monthlyMode: monthlyMode,
-        until: until,
-        count: count,
-      );
+    freq: freq,
+    interval: interval,
+    weekdays: weekdays,
+    monthlyMode: monthlyMode,
+    until: until,
+    count: count,
+  );
 }
 
 class Task {
@@ -249,48 +235,45 @@ class Task {
   bool get isRecurring => recurrenceId != null;
 
   /// Prazo com hora (ou meia-noite se só data).
-  DateTime? get dueDateTime =>
-      dueDate == null ? null : atMinutes(dueDate!, dueMinutes ?? 0);
+  DateTime? get dueDateTime => dueDate == null ? null : atMinutes(dueDate!, dueMinutes ?? 0);
 
   factory Task.fromRow(Map<String, Object?> r) => Task(
-        id: r['id'] as int,
-        title: r['titulo'] as String,
-        description: r['descricao'] as String?,
-        categoryId: r['categoria_id'] as int?,
-        priority: r['prioridade'] as int,
-        dueDate: r['data_prazo'] == null ? null : fromIsoDate(r['data_prazo'] as String),
-        dueMinutes: hmToMinutes(r['hora_prazo'] as String?),
-        status: TaskStatus.parse(r['status'] as String),
-        completedAt: r['concluida_em'] == null
-            ? null
-            : fromIsoDateTime(r['concluida_em'] as String),
-        createdAt: fromIsoDateTime(r['criada_em'] as String),
-        updatedAt: fromIsoDateTime(r['atualizada_em'] as String),
-        postponements: r['adiamentos'] as int,
-        estimateMin: r['estimativa_min'] as int?,
-        recurrenceId: r['recorrencia_id'] as int?,
-        pinnedToday: (r['fixada_hoje'] as int) == 1,
-        order: (r['ordem'] as int?) ?? 0,
-      );
+    id: r['id'] as int,
+    title: r['titulo'] as String,
+    description: r['descricao'] as String?,
+    categoryId: r['categoria_id'] as int?,
+    priority: r['prioridade'] as int,
+    dueDate: r['data_prazo'] == null ? null : fromIsoDate(r['data_prazo'] as String),
+    dueMinutes: hmToMinutes(r['hora_prazo'] as String?),
+    status: TaskStatus.parse(r['status'] as String),
+    completedAt: r['concluida_em'] == null ? null : fromIsoDateTime(r['concluida_em'] as String),
+    createdAt: fromIsoDateTime(r['criada_em'] as String),
+    updatedAt: fromIsoDateTime(r['atualizada_em'] as String),
+    postponements: r['adiamentos'] as int,
+    estimateMin: r['estimativa_min'] as int?,
+    recurrenceId: r['recorrencia_id'] as int?,
+    pinnedToday: (r['fixada_hoje'] as int) == 1,
+    order: (r['ordem'] as int?) ?? 0,
+  );
 
   /// Linha sem `id` e sem `busca` (o repositório calcula a busca).
   Map<String, Object?> toRow() => {
-        'titulo': title,
-        'descricao': description,
-        'categoria_id': categoryId,
-        'prioridade': priority,
-        'data_prazo': dueDate == null ? null : toIsoDate(dueDate!),
-        'hora_prazo': dueDate == null || dueMinutes == null ? null : minutesToHm(dueMinutes!),
-        'status': status.name,
-        'concluida_em': completedAt == null ? null : toIsoDateTime(completedAt!),
-        'criada_em': toIsoDateTime(createdAt),
-        'atualizada_em': toIsoDateTime(updatedAt),
-        'adiamentos': postponements,
-        'estimativa_min': estimateMin,
-        'recorrencia_id': recurrenceId,
-        'fixada_hoje': pinnedToday ? 1 : 0,
-        'ordem': order,
-      };
+    'titulo': title,
+    'descricao': description,
+    'categoria_id': categoryId,
+    'prioridade': priority,
+    'data_prazo': dueDate == null ? null : toIsoDate(dueDate!),
+    'hora_prazo': dueDate == null || dueMinutes == null ? null : minutesToHm(dueMinutes!),
+    'status': status.name,
+    'concluida_em': completedAt == null ? null : toIsoDateTime(completedAt!),
+    'criada_em': toIsoDateTime(createdAt),
+    'atualizada_em': toIsoDateTime(updatedAt),
+    'adiamentos': postponements,
+    'estimativa_min': estimateMin,
+    'recorrencia_id': recurrenceId,
+    'fixada_hoje': pinnedToday ? 1 : 0,
+    'ordem': order,
+  };
 
   Task copyWith({
     int? id,
@@ -315,36 +298,28 @@ class Task {
     bool clearRecurrence = false,
     bool? pinnedToday,
     int? order,
-  }) =>
-      Task(
-        id: id ?? this.id,
-        title: title ?? this.title,
-        description: clearDescription ? null : (description ?? this.description),
-        categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
-        priority: priority ?? this.priority,
-        dueDate: clearDue ? null : (dueDate ?? this.dueDate),
-        dueMinutes: clearDue || clearTime ? null : (dueMinutes ?? this.dueMinutes),
-        status: status ?? this.status,
-        completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-        postponements: postponements ?? this.postponements,
-        estimateMin: estimateMin ?? this.estimateMin,
-        recurrenceId: clearRecurrence ? null : (recurrenceId ?? this.recurrenceId),
-        pinnedToday: pinnedToday ?? this.pinnedToday,
-        order: order ?? this.order,
-      );
+  }) => Task(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    description: clearDescription ? null : (description ?? this.description),
+    categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
+    priority: priority ?? this.priority,
+    dueDate: clearDue ? null : (dueDate ?? this.dueDate),
+    dueMinutes: clearDue || clearTime ? null : (dueMinutes ?? this.dueMinutes),
+    status: status ?? this.status,
+    completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+    postponements: postponements ?? this.postponements,
+    estimateMin: estimateMin ?? this.estimateMin,
+    recurrenceId: clearRecurrence ? null : (recurrenceId ?? this.recurrenceId),
+    pinnedToday: pinnedToday ?? this.pinnedToday,
+    order: order ?? this.order,
+  );
 }
 
 class ChecklistItem {
-  const ChecklistItem({
-    this.id,
-    this.taskId,
-    required this.text,
-    this.quantity,
-    this.checked = false,
-    this.order = 0,
-  });
+  const ChecklistItem({this.id, this.taskId, required this.text, this.quantity, this.checked = false, this.order = 0});
 
   final int? id;
   final int? taskId;
@@ -356,13 +331,13 @@ class ChecklistItem {
   final int order;
 
   factory ChecklistItem.fromRow(Map<String, Object?> r) => ChecklistItem(
-        id: r['id'] as int,
-        taskId: r['tarefa_id'] as int,
-        text: r['texto'] as String,
-        quantity: r['quantidade'] as String?,
-        checked: (r['marcado'] as int) == 1,
-        order: r['ordem'] as int,
-      );
+    id: r['id'] as int,
+    taskId: r['tarefa_id'] as int,
+    text: r['texto'] as String,
+    quantity: r['quantidade'] as String?,
+    checked: (r['marcado'] as int) == 1,
+    order: r['ordem'] as int,
+  );
 
   ChecklistItem copyWith({
     int? id,
@@ -373,15 +348,14 @@ class ChecklistItem {
     bool clearQuantity = false,
     bool? checked,
     int? order,
-  }) =>
-      ChecklistItem(
-        id: clearId ? null : (id ?? this.id),
-        taskId: taskId ?? this.taskId,
-        text: text ?? this.text,
-        quantity: clearQuantity ? null : (quantity ?? this.quantity),
-        checked: checked ?? this.checked,
-        order: order ?? this.order,
-      );
+  }) => ChecklistItem(
+    id: clearId ? null : (id ?? this.id),
+    taskId: taskId ?? this.taskId,
+    text: text ?? this.text,
+    quantity: clearQuantity ? null : (quantity ?? this.quantity),
+    checked: checked ?? this.checked,
+    order: order ?? this.order,
+  );
 }
 
 /// Progresso da checklist: `marcados/total`.
@@ -441,9 +415,7 @@ class Event {
   bool get isRecurring => recurrenceId != null;
 
   /// Duração (dia inteiro: dias de calendário − 1, em `Duration`).
-  Duration get duration => allDay
-      ? Duration(days: daysBetween(start, end))
-      : end.difference(start);
+  Duration get duration => allDay ? Duration(days: daysBetween(start, end)) : end.difference(start);
 
   factory Event.fromRow(Map<String, Object?> r) {
     final allDay = (r['dia_inteiro'] as int) == 1;
@@ -463,17 +435,17 @@ class Event {
   }
 
   Map<String, Object?> toRow() => {
-        'titulo': title,
-        'descricao': description,
-        'local': location,
-        'categoria_id': categoryId,
-        'inicio': allDay ? toIsoDate(start) : toIsoDateTime(start),
-        'fim': allDay ? toIsoDate(end) : toIsoDateTime(end),
-        'dia_inteiro': allDay ? 1 : 0,
-        'recorrencia_id': recurrenceId,
-        'criado_em': toIsoDateTime(createdAt),
-        'atualizado_em': toIsoDateTime(updatedAt),
-      };
+    'titulo': title,
+    'descricao': description,
+    'local': location,
+    'categoria_id': categoryId,
+    'inicio': allDay ? toIsoDate(start) : toIsoDateTime(start),
+    'fim': allDay ? toIsoDate(end) : toIsoDateTime(end),
+    'dia_inteiro': allDay ? 1 : 0,
+    'recorrencia_id': recurrenceId,
+    'criado_em': toIsoDateTime(createdAt),
+    'atualizado_em': toIsoDateTime(updatedAt),
+  };
 
   Event copyWith({
     int? id,
@@ -491,20 +463,19 @@ class Event {
     bool clearRecurrence = false,
     DateTime? createdAt,
     DateTime? updatedAt,
-  }) =>
-      Event(
-        id: id ?? this.id,
-        title: title ?? this.title,
-        description: clearDescription ? null : (description ?? this.description),
-        location: clearLocation ? null : (location ?? this.location),
-        categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
-        start: start ?? this.start,
-        end: end ?? this.end,
-        allDay: allDay ?? this.allDay,
-        recurrenceId: clearRecurrence ? null : (recurrenceId ?? this.recurrenceId),
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  }) => Event(
+    id: id ?? this.id,
+    title: title ?? this.title,
+    description: clearDescription ? null : (description ?? this.description),
+    location: clearLocation ? null : (location ?? this.location),
+    categoryId: clearCategory ? null : (categoryId ?? this.categoryId),
+    start: start ?? this.start,
+    end: end ?? this.end,
+    allDay: allDay ?? this.allDay,
+    recurrenceId: clearRecurrence ? null : (recurrenceId ?? this.recurrenceId),
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
 }
 
 /// Exceção de uma ocorrência ("só este evento").
@@ -530,14 +501,14 @@ class EventException {
   final String? newTitle;
 
   factory EventException.fromRow(Map<String, Object?> r) => EventException(
-        id: r['id'] as int,
-        eventId: r['evento_id'] as int,
-        occurrenceDate: fromIsoDate(r['data_ocorrencia'] as String),
-        cancelled: (r['cancelada'] as int) == 1,
-        newStart: r['novo_inicio'] == null ? null : fromIsoDateTime(r['novo_inicio'] as String),
-        newEnd: r['novo_fim'] == null ? null : fromIsoDateTime(r['novo_fim'] as String),
-        newTitle: r['novo_titulo'] as String?,
-      );
+    id: r['id'] as int,
+    eventId: r['evento_id'] as int,
+    occurrenceDate: fromIsoDate(r['data_ocorrencia'] as String),
+    cancelled: (r['cancelada'] as int) == 1,
+    newStart: r['novo_inicio'] == null ? null : fromIsoDateTime(r['novo_inicio'] as String),
+    newEnd: r['novo_fim'] == null ? null : fromIsoDateTime(r['novo_fim'] as String),
+    newTitle: r['novo_titulo'] as String?,
+  );
 
   Map<String, Object?> toRow({required bool allDay}) {
     String? f(DateTime? d) => d == null ? null : (allDay ? toIsoDate(d) : toIsoDateTime(d));
@@ -554,20 +525,15 @@ class EventException {
 
 /// Lembrete: relativo (minutos antes do início/prazo) OU absoluto.
 class Reminder {
-  const Reminder({
-    this.id,
-    required this.targetType,
-    this.targetId,
-    this.offsetMin,
-    this.at,
-  }) : assert((offsetMin == null) != (at == null));
+  const Reminder({this.id, required this.targetType, this.targetId, this.offsetMin, this.at})
+    : assert((offsetMin == null) != (at == null));
 
   const Reminder.relative(int minutesBefore, {this.id, this.targetType = TargetType.tarefa, this.targetId})
-      : offsetMin = minutesBefore,
-        at = null;
+    : offsetMin = minutesBefore,
+      at = null;
 
   const Reminder.absolute(DateTime this.at, {this.id, this.targetType = TargetType.tarefa, this.targetId})
-      : offsetMin = null;
+    : offsetMin = null;
 
   final int? id;
   final TargetType targetType;
@@ -578,19 +544,19 @@ class Reminder {
   bool get isRelative => offsetMin != null;
 
   factory Reminder.fromRow(Map<String, Object?> r) => Reminder(
-        id: r['id'] as int,
-        targetType: TargetType.parse(r['alvo_tipo'] as String),
-        targetId: r['alvo_id'] as int,
-        offsetMin: r['antecedencia_min'] as int?,
-        at: r['data_hora'] == null ? null : fromIsoDateTime(r['data_hora'] as String),
-      );
+    id: r['id'] as int,
+    targetType: TargetType.parse(r['alvo_tipo'] as String),
+    targetId: r['alvo_id'] as int,
+    offsetMin: r['antecedencia_min'] as int?,
+    at: r['data_hora'] == null ? null : fromIsoDateTime(r['data_hora'] as String),
+  );
 
   Map<String, Object?> toRow(TargetType type, int targetId) => {
-        'alvo_tipo': type.name,
-        'alvo_id': targetId,
-        'antecedencia_min': offsetMin,
-        'data_hora': at == null ? null : toIsoDateTime(at!),
-      };
+    'alvo_tipo': type.name,
+    'alvo_id': targetId,
+    'antecedencia_min': offsetMin,
+    'data_hora': at == null ? null : toIsoDateTime(at!),
+  };
 
   /// "Na hora", "15 min antes", "1 h antes", "1 dia antes", "17/11 09:00".
   String get label {
@@ -647,7 +613,6 @@ class EventOccurrence {
       return !d.isBefore(dateOnly(start)) && !d.isAfter(dateOnly(end));
     }
     final dayEnd = addDays(d, 1);
-    return start.isBefore(dayEnd) && end.isAfter(d) ||
-        (start == end && isSameDay(start, d));
+    return start.isBefore(dayEnd) && end.isAfter(d) || (start == end && isSameDay(start, d));
   }
 }

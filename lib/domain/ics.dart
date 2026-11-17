@@ -11,11 +11,8 @@ String _two(int n) => n.toString().padLeft(2, '0');
 String _date(DateTime d) => '${d.year.toString().padLeft(4, '0')}${_two(d.month)}${_two(d.day)}';
 String _dateTime(DateTime d) => '${_date(d)}T${_two(d.hour)}${_two(d.minute)}00';
 
-String icsEscape(String s) => s
-    .replaceAll('\\', '\\\\')
-    .replaceAll(';', '\\;')
-    .replaceAll(',', '\\,')
-    .replaceAll(RegExp(r'\r?\n'), '\\n');
+String icsEscape(String s) =>
+    s.replaceAll('\\', '\\\\').replaceAll(';', '\\;').replaceAll(',', '\\,').replaceAll(RegExp(r'\r?\n'), '\\n');
 
 /// Dobra linhas em 75 octetos (aproximado por caracteres UTF-16, seguro
 /// porque continua dentro do limite para texto em português).
@@ -36,12 +33,14 @@ String _fold(String line) {
 }
 
 String rruleOf(RecurrenceRule r, DateTime start) {
-  final parts = <String>['FREQ=${switch (r.freq) {
-    Freq.diaria => 'DAILY',
-    Freq.semanal => 'WEEKLY',
-    Freq.mensal => 'MONTHLY',
-    Freq.anual => 'YEARLY',
-  }}'];
+  final parts = <String>[
+    'FREQ=${switch (r.freq) {
+      Freq.diaria => 'DAILY',
+      Freq.semanal => 'WEEKLY',
+      Freq.mensal => 'MONTHLY',
+      Freq.anual => 'YEARLY',
+    }}',
+  ];
   if (r.interval > 1) parts.add('INTERVAL=${r.interval}');
   switch (r.freq) {
     case Freq.semanal:

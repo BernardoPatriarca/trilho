@@ -48,8 +48,7 @@ class PlannedNotification {
   bool get isTaskReminder => kind == PlannedKind.lembrete && targetType == TargetType.tarefa;
 
   /// Muda quando qualquer coisa visível muda (conteúdo, hora ou modo).
-  String signature({required bool exact}) =>
-      '${toIsoDateTime(fireAt)}|$title|$body|$payload|${exact ? 'e' : 'i'}';
+  String signature({required bool exact}) => '${toIsoDateTime(fireAt)}|$title|$body|$payload|${exact ? 'e' : 'i'}';
 }
 
 /// FNV-1a de 32 bits, positivo (cabe no `int` de id de notificação Android).
@@ -108,25 +107,29 @@ List<PlannedNotification> planNotifications({
   for (final s in summaries) {
     final at = s.day;
     if (!inWindow(at)) continue;
-    fixed.add(PlannedNotification(
-      id: stableId('resumo:${toIsoDate(at)}'),
-      kind: PlannedKind.resumo,
-      fireAt: at,
-      title: s.title,
-      body: s.body,
-      occurrence: dateOnly(at),
-      payload: 'hoje',
-    ));
+    fixed.add(
+      PlannedNotification(
+        id: stableId('resumo:${toIsoDate(at)}'),
+        kind: PlannedKind.resumo,
+        fireAt: at,
+        title: s.title,
+        body: s.body,
+        occurrence: dateOnly(at),
+        payload: 'hoje',
+      ),
+    );
   }
   if (backupReminderAt != null && inWindow(backupReminderAt)) {
-    fixed.add(PlannedNotification(
-      id: stableId('backup:${toIsoDate(backupReminderAt)}'),
-      kind: PlannedKind.backup,
-      fireAt: backupReminderAt,
-      title: 'Hora do backup semanal',
-      body: 'Exporte um backup do Trilho em Mais › Backup e exportação.',
-      payload: 'backup',
-    ));
+    fixed.add(
+      PlannedNotification(
+        id: stableId('backup:${toIsoDate(backupReminderAt)}'),
+        kind: PlannedKind.backup,
+        fireAt: backupReminderAt,
+        title: 'Hora do backup semanal',
+        body: 'Exporte um backup do Trilho em Mais › Backup e exportação.',
+        payload: 'backup',
+      ),
+    );
   }
 
   final reminders = <PlannedNotification>[];
@@ -137,17 +140,19 @@ List<PlannedNotification> planNotifications({
     for (final r in input.reminders) {
       final at = r.isRelative ? base?.subtract(Duration(minutes: r.offsetMin!)) : r.at;
       if (at == null || !inWindow(at)) continue;
-      reminders.add(PlannedNotification(
-        id: stableId('lembrete:${r.id}:${t.id}:${toIsoDate(t.dueDate ?? at)}'),
-        kind: PlannedKind.lembrete,
-        fireAt: at,
-        title: t.title,
-        body: _taskBody(t, input.checklist, at),
-        targetType: TargetType.tarefa,
-        targetId: t.id,
-        occurrence: t.dueDate,
-        payload: 'tarefa:${t.id}',
-      ));
+      reminders.add(
+        PlannedNotification(
+          id: stableId('lembrete:${r.id}:${t.id}:${toIsoDate(t.dueDate ?? at)}'),
+          kind: PlannedKind.lembrete,
+          fireAt: at,
+          title: t.title,
+          body: _taskBody(t, input.checklist, at),
+          targetType: TargetType.tarefa,
+          targetId: t.id,
+          occurrence: t.dueDate,
+          payload: 'tarefa:${t.id}',
+        ),
+      );
     }
   }
 
@@ -161,17 +166,19 @@ List<PlannedNotification> planNotifications({
         if (!r.isRelative && o != input.occurrences.first) continue;
         final at = r.isRelative ? base.subtract(Duration(minutes: r.offsetMin!)) : r.at!;
         if (!inWindow(at)) continue;
-        reminders.add(PlannedNotification(
-          id: stableId('lembrete:${r.id}:e${e.id}:${toIsoDate(o.occurrenceDate)}'),
-          kind: PlannedKind.lembrete,
-          fireAt: at,
-          title: o.title,
-          body: _eventBody(o, at),
-          targetType: TargetType.evento,
-          targetId: e.id,
-          occurrence: o.occurrenceDate,
-          payload: 'evento:${e.id}:${toIsoDate(o.occurrenceDate)}',
-        ));
+        reminders.add(
+          PlannedNotification(
+            id: stableId('lembrete:${r.id}:e${e.id}:${toIsoDate(o.occurrenceDate)}'),
+            kind: PlannedKind.lembrete,
+            fireAt: at,
+            title: o.title,
+            body: _eventBody(o, at),
+            targetType: TargetType.evento,
+            targetId: e.id,
+            occurrence: o.occurrenceDate,
+            payload: 'evento:${e.id}:${toIsoDate(o.occurrenceDate)}',
+          ),
+        );
       }
     }
   }

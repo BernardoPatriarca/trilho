@@ -44,7 +44,7 @@ Future<void> initTimezone() async {
 
 class LocalNotificationGateway implements NotificationGateway {
   LocalNotificationGateway([FlutterLocalNotificationsPlugin? plugin])
-      : plugin = plugin ?? FlutterLocalNotificationsPlugin();
+    : plugin = plugin ?? FlutterLocalNotificationsPlugin();
   final FlutterLocalNotificationsPlugin plugin;
 
   AndroidFlutterLocalNotificationsPlugin? get android =>
@@ -59,22 +59,26 @@ class LocalNotificationGateway implements NotificationGateway {
       onDidReceiveNotificationResponse: onTap,
       onDidReceiveBackgroundNotificationResponse: notificationActionBackground,
     );
-    await android?.createNotificationChannel(const AndroidNotificationChannel(
-      channelReminders,
-      'Lembretes',
-      description: 'Lembretes de tarefas e eventos',
-      importance: Importance.high,
-      playSound: true,
-      enableVibration: true,
-    ));
-    await android?.createNotificationChannel(const AndroidNotificationChannel(
-      channelSummary,
-      'Resumo diário',
-      description: 'O resumo do dia, de manhã',
-      importance: Importance.defaultImportance,
-      playSound: false,
-      enableVibration: false,
-    ));
+    await android?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        channelReminders,
+        'Lembretes',
+        description: 'Lembretes de tarefas e eventos',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      ),
+    );
+    await android?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        channelSummary,
+        'Resumo diário',
+        description: 'O resumo do dia, de manhã',
+        importance: Importance.defaultImportance,
+        playSound: false,
+        enableVibration: false,
+      ),
+    );
   }
 
   /// Payload da notificação que abriu o app (app estava fechado).
@@ -136,15 +140,20 @@ class LocalNotificationGateway implements NotificationGateway {
 
   /// Mostra na hora (confirmação de ação em segundo plano).
   Future<void> showNow(int id, String title, String body, {String? payload}) => plugin.show(
-        id: id,
-        title: title,
-        body: body,
-        payload: payload,
-        notificationDetails: const NotificationDetails(
-          android: AndroidNotificationDetails(channelSummary, 'Resumo diário',
-              silent: true, icon: '@drawable/ic_notificacao', timeoutAfter: 8000),
-        ),
-      );
+    id: id,
+    title: title,
+    body: body,
+    payload: payload,
+    notificationDetails: const NotificationDetails(
+      android: AndroidNotificationDetails(
+        channelSummary,
+        'Resumo diário',
+        silent: true,
+        icon: '@drawable/ic_notificacao',
+        timeoutAfter: 8000,
+      ),
+    ),
+  );
 
   @override
   Future<void> cancel(int id) => plugin.cancel(id: id);

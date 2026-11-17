@@ -5,9 +5,7 @@
 const _from = 'áàâãäåéèêëíìîïóòôõöúùûüçñýÿ';
 const _to = 'aaaaaaeeeeiiiiooooouuuucnyy';
 
-final Map<int, int> _map = {
-  for (var i = 0; i < _from.length; i++) _from.codeUnitAt(i): _to.codeUnitAt(i),
-};
+final Map<int, int> _map = {for (var i = 0; i < _from.length; i++) _from.codeUnitAt(i): _to.codeUnitAt(i)};
 
 String normalizeText(String s) {
   final lower = s.toLowerCase();
@@ -19,16 +17,12 @@ String normalizeText(String s) {
 }
 
 /// Texto da coluna `busca`: partes normalizadas separadas por espaço.
-String searchIndex(Iterable<String?> parts) => normalizeText(parts
-    .where((p) => p != null && p.trim().isNotEmpty)
-    .map((p) => p!.trim())
-    .join(' '));
+String searchIndex(Iterable<String?> parts) =>
+    normalizeText(parts.where((p) => p != null && p.trim().isNotEmpty).map((p) => p!.trim()).join(' '));
 
 /// Palavras do termo (normalizadas). Todas precisam aparecer no índice.
-List<String> searchTerms(String query) => normalizeText(query)
-    .split(RegExp(r'\s+'))
-    .where((w) => w.isNotEmpty)
-    .toList();
+List<String> searchTerms(String query) =>
+    normalizeText(query).split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
 
 bool matchesSearch(String index, String query) {
   final terms = searchTerms(query);
@@ -78,10 +72,7 @@ List<String> splitPastedList(String text) {
   final byLine = text.contains('\n');
   final parts = byLine ? text.split(RegExp(r'\r?\n')) : text.split(RegExp(r'[;,]'));
   return parts
-      .map((p) => p
-          .trim()
-          .replaceFirst(RegExp(r'^(\[[ xX]?\]|[-*•·]|\d+[.)])\s*'), '')
-          .trim())
+      .map((p) => p.trim().replaceFirst(RegExp(r'^(\[[ xX]?\]|[-*•·]|\d+[.)])\s*'), '').trim())
       .where((p) => p.isNotEmpty)
       .toList();
 }

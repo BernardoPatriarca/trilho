@@ -100,40 +100,39 @@ class SearchCriteria {
     bool? onlyOverdue,
     bool? withChecklist,
     bool? onlyRecurring,
-  }) =>
-      SearchCriteria(
-        text: text ?? this.text,
-        includeTasks: includeTasks ?? this.includeTasks,
-        includeEvents: includeEvents ?? this.includeEvents,
-        categoryIds: categoryIds ?? this.categoryIds,
-        tagIds: tagIds ?? this.tagIds,
-        priorities: priorities ?? this.priorities,
-        statuses: statuses ?? this.statuses,
-        period: period ?? this.period,
-        from: from ?? this.from,
-        to: to ?? this.to,
-        withDue: clearWithDue ? null : (withDue ?? this.withDue),
-        onlyOverdue: onlyOverdue ?? this.onlyOverdue,
-        withChecklist: withChecklist ?? this.withChecklist,
-        onlyRecurring: onlyRecurring ?? this.onlyRecurring,
-      );
+  }) => SearchCriteria(
+    text: text ?? this.text,
+    includeTasks: includeTasks ?? this.includeTasks,
+    includeEvents: includeEvents ?? this.includeEvents,
+    categoryIds: categoryIds ?? this.categoryIds,
+    tagIds: tagIds ?? this.tagIds,
+    priorities: priorities ?? this.priorities,
+    statuses: statuses ?? this.statuses,
+    period: period ?? this.period,
+    from: from ?? this.from,
+    to: to ?? this.to,
+    withDue: clearWithDue ? null : (withDue ?? this.withDue),
+    onlyOverdue: onlyOverdue ?? this.onlyOverdue,
+    withChecklist: withChecklist ?? this.withChecklist,
+    onlyRecurring: onlyRecurring ?? this.onlyRecurring,
+  );
 
   Map<String, Object?> toJson() => {
-        'texto': text,
-        'tarefas': includeTasks,
-        'eventos': includeEvents,
-        'categorias': categoryIds.toList()..sort(),
-        'tags': tagIds.toList()..sort(),
-        'prioridades': priorities.toList()..sort(),
-        'status': statuses.map((s) => s.name).toList()..sort(),
-        'periodo': period.name,
-        'de': from == null ? null : toIsoDate(from!),
-        'ate': to == null ? null : toIsoDate(to!),
-        'com_prazo': withDue,
-        'so_atrasadas': onlyOverdue,
-        'com_checklist': withChecklist,
-        'recorrentes': onlyRecurring,
-      };
+    'texto': text,
+    'tarefas': includeTasks,
+    'eventos': includeEvents,
+    'categorias': categoryIds.toList()..sort(),
+    'tags': tagIds.toList()..sort(),
+    'prioridades': priorities.toList()..sort(),
+    'status': statuses.map((s) => s.name).toList()..sort(),
+    'periodo': period.name,
+    'de': from == null ? null : toIsoDate(from!),
+    'ate': to == null ? null : toIsoDate(to!),
+    'com_prazo': withDue,
+    'so_atrasadas': onlyOverdue,
+    'com_checklist': withChecklist,
+    'recorrentes': onlyRecurring,
+  };
 
   String encode() => jsonEncode(toJson());
 
@@ -157,8 +156,7 @@ class SearchCriteria {
     );
   }
 
-  factory SearchCriteria.decode(String s) =>
-      SearchCriteria.fromJson((jsonDecode(s) as Map).cast<String, Object?>());
+  factory SearchCriteria.decode(String s) => SearchCriteria.fromJson((jsonDecode(s) as Map).cast<String, Object?>());
 }
 
 /// Dados de uma tarefa para a busca.
@@ -173,7 +171,12 @@ class TaskSearchRow {
 }
 
 class EventSearchRow {
-  const EventSearchRow({required this.event, required this.index, this.tagIds = const {}, this.occurrenceDates = const []});
+  const EventSearchRow({
+    required this.event,
+    required this.index,
+    this.tagIds = const {},
+    this.occurrenceDates = const [],
+  });
   final Event event;
   final String index;
   final Set<int> tagIds;

@@ -27,15 +27,17 @@ Future<FakeGateway> pumpApp(WidgetTester tester, Database db, {PinStore? pins}) 
   Intl.defaultLocale = 'pt_BR';
   await initializeDateFormatting('pt_BR');
   final gw = FakeGateway();
-  await tester.pumpWidget(ProviderScope(
-    overrides: [
-      databaseProvider.overrideWithValue(db),
-      clockProvider.overrideWithValue(() => fixedNow),
-      notificationGatewayProvider.overrideWithValue(gw),
-      pinStoreProvider.overrideWithValue(pins ?? MemoryPinStore()),
-    ],
-    child: const TrilhoApp(),
-  ));
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        clockProvider.overrideWithValue(() => fixedNow),
+        notificationGatewayProvider.overrideWithValue(gw),
+        pinStoreProvider.overrideWithValue(pins ?? MemoryPinStore()),
+      ],
+      child: const TrilhoApp(),
+    ),
+  );
   await settle(tester);
   return gw;
 }
@@ -43,7 +45,6 @@ Future<FakeGateway> pumpApp(WidgetTester tester, Database db, {PinStore? pins}) 
 /// pumpAndSettle com limite (indicadores indeterminados não param).
 Future<void> settle(WidgetTester tester, [int frames = 20]) async {
   for (var i = 0; i < frames; i++) {
-    await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 1)));
     await tester.pump(const Duration(milliseconds: 100));
   }
 }

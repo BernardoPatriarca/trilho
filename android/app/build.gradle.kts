@@ -16,7 +16,8 @@ val keyProperties = Properties().apply {
 
 android {
     namespace = "com.bernardopatriarca.trilho"
-    compileSdk = flutter.compileSdkVersion
+    // androidx.core 1.19 (dependência dos plugins) exige compilar contra a API 37.
+    compileSdk = 37
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -55,6 +56,9 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }

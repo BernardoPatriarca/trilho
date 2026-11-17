@@ -11,12 +11,7 @@ import 'models.dart';
 
 /// Ocorrências (datas, à meia-noite) da série que começa em [start], dentro
 /// de [from]..[to] (inclusivo). Sem regra, a única ocorrência é [start].
-List<DateTime> occurrencesBetween(
-  RecurrenceRule? rule,
-  DateTime start,
-  DateTime from,
-  DateTime to,
-) {
+List<DateTime> occurrencesBetween(RecurrenceRule? rule, DateTime start, DateTime from, DateTime to) {
   final s = dateOnly(start);
   final f = dateOnly(from);
   final t = dateOnly(to);
@@ -103,11 +98,11 @@ Iterable<DateTime> _iterate(RecurrenceRule rule, DateTime start, {DateTime? skip
 }
 
 DateTime _periodStart(RecurrenceRule rule, DateTime start, int offset) => switch (rule.freq) {
-      Freq.diaria => addDays(start, offset),
-      Freq.semanal => addDays(startOfWeek(start), offset * 7),
-      Freq.mensal => DateTime(start.year, start.month + offset),
-      Freq.anual => DateTime(start.year + offset),
-    };
+  Freq.diaria => addDays(start, offset),
+  Freq.semanal => addDays(startOfWeek(start), offset * 7),
+  Freq.mensal => DateTime(start.year, start.month + offset),
+  Freq.anual => DateTime(start.year + offset),
+};
 
 /// Datas candidatas do período [offset] (em unidades da frequência).
 List<DateTime> _period(RecurrenceRule rule, DateTime start, int offset) {

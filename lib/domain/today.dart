@@ -5,12 +5,8 @@ import 'tasks.dart';
 
 /// Item da linha do tempo: evento com hora ou tarefa com hora.
 class TimelineEntry {
-  const TimelineEntry.event(EventOccurrence this.event)
-      : task = null,
-        time = null;
-  TimelineEntry.task(Task this.task)
-      : event = null,
-        time = task.dueDateTime;
+  const TimelineEntry.event(EventOccurrence this.event) : task = null, time = null;
+  TimelineEntry.task(Task this.task) : event = null, time = task.dueDateTime;
 
   final EventOccurrence? event;
   final Task? task;
@@ -63,11 +59,7 @@ class TodayView {
 }
 
 /// [events] são as ocorrências já expandidas (pode incluir outros dias).
-TodayView buildToday({
-  required List<Task> tasks,
-  required List<EventOccurrence> events,
-  required DateTime now,
-}) {
+TodayView buildToday({required List<Task> tasks, required List<EventOccurrence> events, required DateTime now}) {
   final today = dateOnly(now);
   final overdue = <Task>[];
   final timedTasks = <Task>[];
@@ -92,16 +84,17 @@ TodayView buildToday({
 
   final todays = events.where((e) => e.occursOn(today)).toList();
   final allDay = todays.where((e) => e.allDay).toList();
-  final timeline = <TimelineEntry>[
-    for (final e in todays.where((e) => !e.allDay)) TimelineEntry.event(e),
-    for (final t in timedTasks) TimelineEntry.task(t),
-  ]..sort((a, b) {
-      final c = a.sortKey.compareTo(b.sortKey);
-      if (c != 0) return c;
-      // Eventos antes de tarefas no mesmo horário.
-      if ((a.event == null) != (b.event == null)) return a.event != null ? -1 : 1;
-      return 0;
-    });
+  final timeline =
+      <TimelineEntry>[
+        for (final e in todays.where((e) => !e.allDay)) TimelineEntry.event(e),
+        for (final t in timedTasks) TimelineEntry.task(t),
+      ]..sort((a, b) {
+        final c = a.sortKey.compareTo(b.sortKey);
+        if (c != 0) return c;
+        // Eventos antes de tarefas no mesmo horário.
+        if ((a.event == null) != (b.event == null)) return a.event != null ? -1 : 1;
+        return 0;
+      });
 
   overdue.sort(compareByDue);
   untimed.sort(compareByPriority);

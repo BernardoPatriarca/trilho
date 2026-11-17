@@ -27,29 +27,25 @@ class AppShell extends StatelessWidget {
           : null,
       bottomNavigationBar: NavigationBar(
         selectedIndex: shell.currentIndex,
-        onDestinationSelected: (i) =>
-            shell.goBranch(i, initialLocation: i == shell.currentIndex),
+        onDestinationSelected: (i) => shell.goBranch(i, initialLocation: i == shell.currentIndex),
         destinations: const [
+          NavigationDestination(icon: Icon(Icons.wb_sunny_outlined), selectedIcon: Icon(Icons.wb_sunny), label: 'Hoje'),
           NavigationDestination(
-              icon: Icon(Icons.wb_sunny_outlined),
-              selectedIcon: Icon(Icons.wb_sunny),
-              label: 'Hoje'),
+            icon: Icon(Icons.calendar_month_outlined),
+            selectedIcon: Icon(Icons.calendar_month),
+            label: 'Agenda',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.calendar_month_outlined),
-              selectedIcon: Icon(Icons.calendar_month),
-              label: 'Agenda'),
+            icon: Icon(Icons.check_circle_outline),
+            selectedIcon: Icon(Icons.check_circle),
+            label: 'Tarefas',
+          ),
           NavigationDestination(
-              icon: Icon(Icons.check_circle_outline),
-              selectedIcon: Icon(Icons.check_circle),
-              label: 'Tarefas'),
-          NavigationDestination(
-              icon: Icon(Icons.insights_outlined),
-              selectedIcon: Icon(Icons.insights),
-              label: 'Estatísticas'),
-          NavigationDestination(
-              icon: Icon(Icons.more_horiz),
-              selectedIcon: Icon(Icons.more_horiz),
-              label: 'Mais'),
+            icon: Icon(Icons.insights_outlined),
+            selectedIcon: Icon(Icons.insights),
+            label: 'Estatísticas',
+          ),
+          NavigationDestination(icon: Icon(Icons.more_horiz), selectedIcon: Icon(Icons.more_horiz), label: 'Mais'),
         ],
       ),
     );

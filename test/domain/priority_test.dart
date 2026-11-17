@@ -3,8 +3,7 @@ import 'package:trilho/domain/priority.dart';
 
 void main() {
   test('prioridades têm código, nome e valor do banco', () {
-    expect(Priority.values.map((p) => '${p.code} ${p.label}'),
-        ['P1 Urgente', 'P2 Alta', 'P3 Média', 'P4 Baixa']);
+    expect(Priority.values.map((p) => '${p.code} ${p.label}'), ['P1 Urgente', 'P2 Alta', 'P3 Média', 'P4 Baixa']);
     expect(Priority.fromValue(1), Priority.p1);
     expect(Priority.fromValue(4), Priority.p4);
   });

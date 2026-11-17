@@ -89,7 +89,8 @@ class ProductivityStats {
   final Duration? avgLeadTime;
   final WeeklyReview review;
 
-  bool get groupedByMonth => perDay.isNotEmpty && perDay.length > 1 && perDay[0].day.day == 1 && to.difference(from).inDays > 90;
+  bool get groupedByMonth =>
+      perDay.isNotEmpty && perDay.length > 1 && perDay[0].day.day == 1 && to.difference(from).inDays > 90;
 }
 
 ProductivityStats computeStats({
@@ -105,10 +106,7 @@ ProductivityStats computeStats({
   if (period.days != null) {
     from = addDays(today, -(period.days! - 1));
   } else {
-    final starts = [
-      ...completed.map((t) => dateOnly(t.completedAt!)),
-      ...tasks.map((t) => dateOnly(t.createdAt)),
-    ];
+    final starts = [...completed.map((t) => dateOnly(t.completedAt!)), ...tasks.map((t) => dateOnly(t.createdAt))];
     from = starts.isEmpty ? today : starts.reduce((a, b) => a.isBefore(b) ? a : b);
   }
   final to = today;
@@ -126,7 +124,9 @@ ProductivityStats computeStats({
     var m = DateTime(from.year, from.month);
     while (!m.isAfter(to)) {
       final next = DateTime(m.year, m.month + 1);
-      perDay.add(DayCount(m, inPeriod.where((t) => !t.completedAt!.isBefore(m) && t.completedAt!.isBefore(next)).length));
+      perDay.add(
+        DayCount(m, inPeriod.where((t) => !t.completedAt!.isBefore(m) && t.completedAt!.isBefore(next)).length),
+      );
       m = next;
     }
   } else {
@@ -236,7 +236,13 @@ WeeklyReview weeklyReview(List<Task> tasks, DateTime now) {
       topN = v;
     }
   });
-  return WeeklyReview(completed: done.length, created: created, postponed: postponed, topCategoryId: top, topCategoryCount: topN);
+  return WeeklyReview(
+    completed: done.length,
+    created: created,
+    postponed: postponed,
+    topCategoryId: top,
+    topCategoryCount: topN,
+  );
 }
 
 /// "12 concluídas, 3 a mais que nos 7 dias anteriores"

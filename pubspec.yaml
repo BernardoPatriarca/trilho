@@ -55,6 +55,9 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  assets:
+    - assets/branding/icon.png
+
   # Fontes empacotadas: o app não tem internet (sem google_fonts em runtime).
   fonts:
     - family: Oswald
@@ -77,3 +80,24 @@ flutter:
           weight: 600
         - asset: assets/fonts/Rubik-Bold.ttf
           weight: 700
+
+# Ícone do app (gerado com: dart run flutter_launcher_icons).
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/branding/icon.png
+  min_sdk_android: 26
+  adaptive_icon_background: "#12161C"
+  adaptive_icon_foreground: assets/branding/icon_foreground.png
+  adaptive_icon_monochrome: assets/branding/icon_monochrome.png
+
+# Splash nativo (gerado com: dart run flutter_native_splash:create).
+flutter_native_splash:
+  color: "#12161C"
+  image: assets/branding/splash.png
+  android_12:
+    color: "#12161C"
+    image: assets/branding/splash_android12.png
+    icon_background_color: "#12161C"
+  ios: false
+  web: false

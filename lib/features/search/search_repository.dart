@@ -46,13 +46,20 @@ class SearchRepository {
         for (final r in await db.rawQuery('SELECT tarefa_id, tag_id FROM tarefa_tag WHERE tarefa_id IN ($inList)')) {
           tagIds.putIfAbsent(r['tarefa_id'] as int, () => {}).add(r['tag_id'] as int);
         }
-        for (final r in await db.rawQuery('SELECT tarefa_id, COUNT(*) AS n FROM checklist_item WHERE tarefa_id IN ($inList) GROUP BY tarefa_id')) {
+        for (final r in await db.rawQuery(
+          'SELECT tarefa_id, COUNT(*) AS n FROM checklist_item WHERE tarefa_id IN ($inList) GROUP BY tarefa_id',
+        )) {
           counts[r['tarefa_id'] as int] = r['n'] as int;
         }
       }
       for (final r in rows) {
         final t = Task.fromRow(r);
-        final row = TaskSearchRow(task: t, index: r['busca'] as String, tagIds: tagIds[t.id] ?? const {}, checklistCount: counts[t.id] ?? 0);
+        final row = TaskSearchRow(
+          task: t,
+          index: r['busca'] as String,
+          tagIds: tagIds[t.id] ?? const {},
+          checklistCount: counts[t.id] ?? 0,
+        );
         if (taskMatches(row, c, now, mondayFirst: mondayFirst)) tasks.add(t);
       }
       tasks.sort((a, b) {
@@ -113,7 +120,13 @@ class SearchRepository {
   }
 
   Future<List<SavedFilter>> savedFilters() async => (await db.query('filtro_salvo', orderBy: 'nome'))
-      .map((r) => SavedFilter(id: r['id'] as int, name: r['nome'] as String, criteria: SearchCriteria.decode(r['json'] as String)))
+      .map(
+        (r) => SavedFilter(
+          id: r['id'] as int,
+          name: r['nome'] as String,
+          criteria: SearchCriteria.decode(r['json'] as String),
+        ),
+      )
       .toList();
 
   Future<int> saveFilter(String name, SearchCriteria c) async {

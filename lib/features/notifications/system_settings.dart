@@ -44,10 +44,13 @@ class SystemSettings {
 
 /// Dicas curtas por fabricante (economia de bateria agressiva).
 const batteryTips = {
-  'xiaomi': 'Xiaomi/Redmi/POCO: Configurações › Apps › Trilho › Economia de bateria › "Sem restrições" '
+  'xiaomi':
+      'Xiaomi/Redmi/POCO: Configurações › Apps › Trilho › Economia de bateria › "Sem restrições" '
       'e ative "Início automático".',
-  'samsung': 'Samsung: Configurações › Bateria › Limites de uso em segundo plano › tire o Trilho de '
+  'samsung':
+      'Samsung: Configurações › Bateria › Limites de uso em segundo plano › tire o Trilho de '
       '"Apps em suspensão" e adicione em "Apps que nunca são suspensos".',
-  'motorola': 'Motorola: Configurações › Apps › Trilho › Bateria › "Sem restrições" (ou "Otimização" › '
+  'motorola':
+      'Motorola: Configurações › Apps › Trilho › Bateria › "Sem restrições" (ou "Otimização" › '
       '"Não otimizar").',
 };

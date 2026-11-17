@@ -15,11 +15,7 @@ void main() {
     await pumpApp(tester, await openWidgetDb());
     final fab = find.byKey(const Key('quickAddFab'));
 
-    for (final (tab, title) in const [
-      ('Agenda', 'AGENDA'),
-      ('Tarefas', 'TAREFAS'),
-      ('Estatísticas', 'ESTATÍSTICAS'),
-    ]) {
+    for (final (tab, title) in const [('Agenda', 'AGENDA'), ('Tarefas', 'TAREFAS'), ('Estatísticas', 'ESTATÍSTICAS')]) {
       await tester.tap(find.text(tab));
       await settle(tester);
       expect(find.text(title), findsOneWidget);
@@ -32,8 +28,7 @@ void main() {
     expect(fab, findsNothing);
   });
 
-  testWidgets('FAB abre a adição rápida com o seletor Tarefa/Evento',
-      (tester) async {
+  testWidgets('FAB abre a adição rápida com o seletor Tarefa/Evento', (tester) async {
     await pumpApp(tester, await openWidgetDb());
     await tester.tap(find.byKey(const Key('quickAddFab')));
     await settle(tester);
@@ -47,9 +42,13 @@ void main() {
     await pumpApp(tester, await openWidgetDb());
     await tester.tap(find.text('Mais'));
     await settle(tester);
+    await tester.dragUntilVisible(find.text('Preferências'), find.text('Categorias'), const Offset(0, -250));
+    await tester.pump();
+    await tester.tap(find.text('Preferências'));
+    await settle(tester);
     await tester.tap(find.text('Claro'));
     await settle(tester);
-    final context = tester.element(find.text('MAIS'));
+    final context = tester.element(find.text('PREFERÊNCIAS'));
     expect(Theme.of(context).brightness, Brightness.light);
     expect(context.colors.background, TrilhoColors.light.background);
   });

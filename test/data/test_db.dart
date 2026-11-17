@@ -34,6 +34,6 @@ class FakeGateway implements NotificationGateway {
   @override
   Future<void> cancelAll() async => scheduled.clear();
 
-  List<PlannedNotification> ofKind(PlannedKind k) => scheduled.values.where((n) => n.kind == k).toList()
-    ..sort((a, b) => a.fireAt.compareTo(b.fireAt));
+  List<PlannedNotification> ofKind(PlannedKind k) =>
+      scheduled.values.where((n) => n.kind == k).toList()..sort((a, b) => a.fireAt.compareTo(b.fireAt));
 }

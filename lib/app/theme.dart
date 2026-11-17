@@ -81,20 +81,19 @@ class TrilhoColors extends ThemeExtension<TrilhoColors> {
     Color? error,
     Color? warning,
     Color? success,
-  }) =>
-      TrilhoColors(
-        background: background ?? this.background,
-        surface: surface ?? this.surface,
-        surfaceHigh: surfaceHigh ?? this.surfaceHigh,
-        border: border ?? this.border,
-        text: text ?? this.text,
-        textSecondary: textSecondary ?? this.textSecondary,
-        accent: accent ?? this.accent,
-        onAccent: onAccent ?? this.onAccent,
-        error: error ?? this.error,
-        warning: warning ?? this.warning,
-        success: success ?? this.success,
-      );
+  }) => TrilhoColors(
+    background: background ?? this.background,
+    surface: surface ?? this.surface,
+    surfaceHigh: surfaceHigh ?? this.surfaceHigh,
+    border: border ?? this.border,
+    text: text ?? this.text,
+    textSecondary: textSecondary ?? this.textSecondary,
+    accent: accent ?? this.accent,
+    onAccent: onAccent ?? this.onAccent,
+    error: error ?? this.error,
+    warning: warning ?? this.warning,
+    success: success ?? this.success,
+  );
 
   @override
   TrilhoColors lerp(TrilhoColors? other, double t) {
@@ -117,17 +116,16 @@ class TrilhoColors extends ThemeExtension<TrilhoColors> {
 }
 
 extension TrilhoThemeContext on BuildContext {
-  TrilhoColors get colors =>
-      Theme.of(this).extension<TrilhoColors>() ?? TrilhoColors.dark;
+  TrilhoColors get colors => Theme.of(this).extension<TrilhoColors>() ?? TrilhoColors.dark;
 }
 
 /// Cores das prioridades (iguais nos dois temas). Sempre exibidas com rótulo.
 Color priorityColor(Priority p) => switch (p) {
-      Priority.p1 => const Color(0xFFFF5A5F),
-      Priority.p2 => const Color(0xFFFF9F43),
-      Priority.p3 => const Color(0xFF4DA3FF),
-      Priority.p4 => const Color(0xFF8A94A3),
-    };
+  Priority.p1 => const Color(0xFFFF5A5F),
+  Priority.p2 => const Color(0xFFFF9F43),
+  Priority.p3 => const Color(0xFF4DA3FF),
+  Priority.p4 => const Color(0xFF8A94A3),
+};
 
 const headingFont = 'Oswald';
 const bodyFont = 'Rubik';
@@ -137,8 +135,7 @@ const tabular = [FontFeature.tabularFigures()];
 const shortAnimation = Duration(milliseconds: 200);
 
 /// Estilo para números grandes (Oswald, algarismos tabulares).
-TextStyle numberStyle(BuildContext context, double size,
-        {Color? color, FontWeight weight = FontWeight.w600}) =>
+TextStyle numberStyle(BuildContext context, double size, {Color? color, FontWeight weight = FontWeight.w600}) =>
     TextStyle(
       fontFamily: headingFont,
       fontSize: size,
@@ -149,8 +146,7 @@ TextStyle numberStyle(BuildContext context, double size,
     );
 
 ThemeData buildTheme(Brightness brightness) {
-  final c =
-      brightness == Brightness.dark ? TrilhoColors.dark : TrilhoColors.light;
+  final c = brightness == Brightness.dark ? TrilhoColors.dark : TrilhoColors.light;
 
   final scheme = ColorScheme(
     brightness: brightness,
@@ -181,18 +177,15 @@ ThemeData buildTheme(Brightness brightness) {
   );
 
   TextStyle h(double size, [FontWeight w = FontWeight.w600]) => TextStyle(
-      fontFamily: headingFont,
-      fontSize: size,
-      fontWeight: w,
-      color: c.text,
-      letterSpacing: 0.4,
-      fontFeatures: tabular);
+    fontFamily: headingFont,
+    fontSize: size,
+    fontWeight: w,
+    color: c.text,
+    letterSpacing: 0.4,
+    fontFeatures: tabular,
+  );
   TextStyle b(double size, [FontWeight w = FontWeight.w400, Color? color]) =>
-      TextStyle(
-          fontFamily: bodyFont,
-          fontSize: size,
-          fontWeight: w,
-          color: color ?? c.text);
+      TextStyle(fontFamily: bodyFont, fontSize: size, fontWeight: w, color: color ?? c.text);
 
   final textTheme = TextTheme(
     displayLarge: h(56),
@@ -213,11 +206,10 @@ ThemeData buildTheme(Brightness brightness) {
   );
 
   final shape = RoundedRectangleBorder(borderRadius: BorderRadius.circular(16));
-  OutlineInputBorder border(Color color, [double width = 1]) =>
-      OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: BorderSide(color: color, width: width),
-      );
+  OutlineInputBorder border(Color color, [double width = 1]) => OutlineInputBorder(
+    borderRadius: BorderRadius.circular(16),
+    borderSide: BorderSide(color: color, width: width),
+  );
 
   return ThemeData(
     useMaterial3: true,
@@ -250,14 +242,12 @@ ThemeData buildTheme(Brightness brightness) {
       surfaceTintColor: Colors.transparent,
       indicatorColor: c.accent,
       height: 68,
-      iconTheme: WidgetStateProperty.resolveWith((s) => IconThemeData(
-          color: s.contains(WidgetState.selected)
-              ? c.onAccent
-              : c.textSecondary)),
-      labelTextStyle: WidgetStateProperty.resolveWith((s) => b(
-          12,
-          FontWeight.w500,
-          s.contains(WidgetState.selected) ? c.text : c.textSecondary)),
+      iconTheme: WidgetStateProperty.resolveWith(
+        (s) => IconThemeData(color: s.contains(WidgetState.selected) ? c.onAccent : c.textSecondary),
+      ),
+      labelTextStyle: WidgetStateProperty.resolveWith(
+        (s) => b(12, FontWeight.w500, s.contains(WidgetState.selected) ? c.text : c.textSecondary),
+      ),
     ),
     floatingActionButtonTheme: FloatingActionButtonThemeData(
       backgroundColor: c.accent,
@@ -287,15 +277,12 @@ ThemeData buildTheme(Brightness brightness) {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         // No claro, o lavanda sobre creme tem pouco contraste: texto escuro.
-        foregroundColor:
-            brightness == Brightness.dark ? c.accent : const Color(0xFF3A4FB0),
+        foregroundColor: brightness == Brightness.dark ? c.accent : const Color(0xFF3A4FB0),
         minimumSize: const Size(48, 48),
         textStyle: b(14, FontWeight.w600),
       ),
     ),
-    iconButtonTheme: IconButtonThemeData(
-      style: IconButton.styleFrom(minimumSize: const Size(48, 48)),
-    ),
+    iconButtonTheme: IconButtonThemeData(style: IconButton.styleFrom(minimumSize: const Size(48, 48))),
     chipTheme: ChipThemeData(
       backgroundColor: c.surface,
       selectedColor: c.accent,
@@ -323,8 +310,7 @@ ThemeData buildTheme(Brightness brightness) {
       behavior: SnackBarBehavior.floating,
       backgroundColor: c.surfaceHigh,
       contentTextStyle: b(14),
-      actionTextColor:
-          brightness == Brightness.dark ? c.accent : const Color(0xFF3A4FB0),
+      actionTextColor: brightness == Brightness.dark ? c.accent : const Color(0xFF3A4FB0),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     ),
     dialogTheme: DialogThemeData(
@@ -337,8 +323,7 @@ ThemeData buildTheme(Brightness brightness) {
       backgroundColor: c.surface,
       surfaceTintColor: Colors.transparent,
       showDragHandle: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
     ),
     dividerTheme: DividerThemeData(color: c.border, space: 1),
     listTileTheme: ListTileThemeData(
@@ -353,17 +338,18 @@ ThemeData buildTheme(Brightness brightness) {
       circularTrackColor: c.surfaceHigh,
     ),
     checkboxTheme: CheckboxThemeData(
-      fillColor: WidgetStateProperty.resolveWith((s) =>
-          s.contains(WidgetState.selected) ? c.accent : Colors.transparent),
+      fillColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? c.accent : Colors.transparent,
+      ),
       checkColor: WidgetStatePropertyAll(c.onAccent),
       side: BorderSide(color: c.textSecondary, width: 2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
     ),
     switchTheme: SwitchThemeData(
-      thumbColor: WidgetStateProperty.resolveWith((s) =>
-          s.contains(WidgetState.selected) ? c.onAccent : c.textSecondary),
-      trackColor: WidgetStateProperty.resolveWith((s) =>
-          s.contains(WidgetState.selected) ? c.accent : c.surfaceHigh),
+      thumbColor: WidgetStateProperty.resolveWith(
+        (s) => s.contains(WidgetState.selected) ? c.onAccent : c.textSecondary,
+      ),
+      trackColor: WidgetStateProperty.resolveWith((s) => s.contains(WidgetState.selected) ? c.accent : c.surfaceHigh),
     ),
     segmentedButtonTheme: SegmentedButtonThemeData(
       style: SegmentedButton.styleFrom(
@@ -374,12 +360,7 @@ ThemeData buildTheme(Brightness brightness) {
         minimumSize: const Size(48, 48),
       ),
     ),
-    datePickerTheme: DatePickerThemeData(
-      backgroundColor: c.surface,
-      surfaceTintColor: Colors.transparent,
-    ),
-    timePickerTheme: TimePickerThemeData(
-      backgroundColor: c.surface,
-    ),
+    datePickerTheme: DatePickerThemeData(backgroundColor: c.surface, surfaceTintColor: Colors.transparent),
+    timePickerTheme: TimePickerThemeData(backgroundColor: c.surface),
   );
 }

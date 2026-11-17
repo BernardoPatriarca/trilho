@@ -54,11 +54,13 @@ final localNotificationsProvider = Provider<LocalNotificationGateway?>((ref) {
   return g is LocalNotificationGateway ? g : null;
 });
 
-final schedulerProvider = Provider((ref) => NotificationScheduler(
-      ref.watch(databaseProvider),
-      ref.watch(notificationGatewayProvider),
-      clock: ref.watch(clockProvider),
-    ));
+final schedulerProvider = Provider(
+  (ref) => NotificationScheduler(
+    ref.watch(databaseProvider),
+    ref.watch(notificationGatewayProvider),
+    clock: ref.watch(clockProvider),
+  ),
+);
 
 final systemSettingsProvider = Provider((ref) => const SystemSettings());
 
@@ -90,21 +92,30 @@ class SyncError extends Notifier<String?> {
 
 final lastSyncErrorProvider = NotifierProvider<SyncError, String?>(SyncError.new);
 
+/// Avisa que os dados mudaram: recarrega as telas e reagenda notificações.
+/// Usa o container (vive o app inteiro), então serve também em "Desfazer"
+/// de SnackBar depois que o widget de origem saiu da tela.
+void notifyDataChanged(ProviderContainer c) {
+  c.read(dataRevisionProvider.notifier).bump();
+  unawaited(resyncNotifications(c));
+}
+
+Future<void> resyncNotifications(ProviderContainer c) async {
+  try {
+    await c.read(schedulerProvider).sync();
+    c.read(lastSyncErrorProvider.notifier).set(null);
+  } on Object catch (e) {
+    c.read(lastSyncErrorProvider.notifier).set('$e');
+  }
+}
+
 extension DataChanged on WidgetRef {
-  /// Avisa que os dados mudaram: recarrega as telas e reagenda notificações.
-  void dataChanged() {
-    read(dataRevisionProvider.notifier).bump();
-    unawaited(resync());
-  }
+  ProviderContainer get container => ProviderScope.containerOf(context, listen: false);
+  void dataChanged() => notifyDataChanged(container);
+  Future<void> resync() => resyncNotifications(container);
+  DateTime now() => read(clockProvider)();
+}
 
-  Future<void> resync() async {
-    try {
-      await read(schedulerProvider).sync();
-      read(lastSyncErrorProvider.notifier).set(null);
-    } on Object catch (e) {
-      read(lastSyncErrorProvider.notifier).set('$e');
-    }
-  }
-
+extension ContainerNow on ProviderContainer {
   DateTime now() => read(clockProvider)();
 }

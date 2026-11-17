@@ -21,7 +21,13 @@ enum EditScope {
 }
 
 class EventDetails {
-  const EventDetails({required this.event, this.rule, this.tags = const [], this.reminders = const [], this.exceptions = const []});
+  const EventDetails({
+    required this.event,
+    this.rule,
+    this.tags = const [],
+    this.reminders = const [],
+    this.exceptions = const [],
+  });
   final Event event;
   final RecurrenceRule? rule;
   final List<Tag> tags;
@@ -52,9 +58,11 @@ class EventRepository {
   /// Séries que podem ter ocorrências em [from]..[to]: as recorrentes e as
   /// únicas que tocam o intervalo (usa o índice de `inicio`).
   Future<List<EventSeries>> seriesInRange(DateTime from, DateTime to) async {
-    final rows = await db.query('evento',
-        where: 'recorrencia_id IS NOT NULL OR (inicio < ? AND fim >= ?)',
-        whereArgs: [toIsoDate(addDays(dateOnly(to), 1)), toIsoDate(dateOnly(from))]);
+    final rows = await db.query(
+      'evento',
+      where: 'recorrencia_id IS NOT NULL OR (inicio < ? AND fim >= ?)',
+      whereArgs: [toIsoDate(addDays(dateOnly(to), 1)), toIsoDate(dateOnly(from))],
+    );
     return _withRules(rows);
   }
 
@@ -77,7 +85,11 @@ class EventRepository {
     }
     return [
       for (final e in events)
-        EventSeries(e, rule: e.recurrenceId == null ? null : rules[e.recurrenceId], exceptions: exceptions[e.id] ?? const []),
+        EventSeries(
+          e,
+          rule: e.recurrenceId == null ? null : rules[e.recurrenceId],
+          exceptions: exceptions[e.id] ?? const [],
+        ),
     ];
   }
 
@@ -110,23 +122,36 @@ class EventRepository {
     final e = Event.fromRow(rows.first);
     final rule = e.recurrenceId == null
         ? null
-        : (await db.query('recorrencia', where: 'id = ?', whereArgs: [e.recurrenceId])).map(RecurrenceRule.fromRow).firstOrNull;
+        : (await db.query(
+            'recorrencia',
+            where: 'id = ?',
+            whereArgs: [e.recurrenceId],
+          )).map(RecurrenceRule.fromRow).firstOrNull;
     return EventDetails(
       event: e,
       rule: rule,
-      tags: (await db.rawQuery('SELECT t.* FROM tag t JOIN evento_tag et ON et.tag_id = t.id WHERE et.evento_id = ? ORDER BY t.nome', [id]))
-          .map(Tag.fromRow)
-          .toList(),
-      reminders: (await db.query('lembrete', where: "alvo_tipo = 'evento' AND alvo_id = ?", whereArgs: [id], orderBy: 'id'))
-          .map(Reminder.fromRow)
-          .toList(),
-      exceptions: (await db.query('evento_excecao', where: 'evento_id = ?', whereArgs: [id])).map(EventException.fromRow).toList(),
+      tags: (await db.rawQuery(
+        'SELECT t.* FROM tag t JOIN evento_tag et ON et.tag_id = t.id WHERE et.evento_id = ? ORDER BY t.nome',
+        [id],
+      )).map(Tag.fromRow).toList(),
+      reminders: (await db.query(
+        'lembrete',
+        where: "alvo_tipo = 'evento' AND alvo_id = ?",
+        whereArgs: [id],
+        orderBy: 'id',
+      )).map(Reminder.fromRow).toList(),
+      exceptions: (await db.query(
+        'evento_excecao',
+        where: 'evento_id = ?',
+        whereArgs: [id],
+      )).map(EventException.fromRow).toList(),
     );
   }
 
   void _validate(EventDraft d) {
     final e = d.event;
-    final error = validateEvent(title: e.title, start: e.start, end: e.end, allDay: e.allDay) ?? validateRule(d.rule, e.start);
+    final error =
+        validateEvent(title: e.title, start: e.start, end: e.end, allDay: e.allDay) ?? validateRule(d.rule, e.start);
     if (error != null) throw ValidationException(error);
   }
 
@@ -182,22 +207,30 @@ class EventRepository {
 
   Future<void> _deleteRuleIfUnused(DatabaseExecutor ex, int ruleId) async {
     final used = await ex.rawQuery(
-        'SELECT (SELECT COUNT(*) FROM tarefa WHERE recorrencia_id = ?) + (SELECT COUNT(*) FROM evento WHERE recorrencia_id = ?) AS n',
-        [ruleId, ruleId]);
+      'SELECT (SELECT COUNT(*) FROM tarefa WHERE recorrencia_id = ?) + (SELECT COUNT(*) FROM evento WHERE recorrencia_id = ?) AS n',
+      [ruleId, ruleId],
+    );
     if ((used.first['n'] as int) == 0) await ex.delete('recorrencia', where: 'id = ?', whereArgs: [ruleId]);
   }
 
   /// Edita uma ocorrência de evento recorrente conforme o [scope].
   /// [draft] traz os valores novos (início/fim já na data da ocorrência).
   /// Retorna o id do evento que contém a ocorrência editada.
-  Future<int> saveOccurrence(EditScope scope, EventOccurrence occ, EventDraft draft,
-      {required DateTime now, int defaultReminderMin = 15}) async {
+  Future<int> saveOccurrence(
+    EditScope scope,
+    EventOccurrence occ,
+    EventDraft draft, {
+    required DateTime now,
+    int defaultReminderMin = 15,
+  }) async {
     _validate(draft);
     final series = occ.event;
     return db.transaction((txn) async {
-      final rule = (await txn.query('recorrencia', where: 'id = ?', whereArgs: [series.recurrenceId]))
-          .map(RecurrenceRule.fromRow)
-          .firstOrNull;
+      final rule = (await txn.query(
+        'recorrencia',
+        where: 'id = ?',
+        whereArgs: [series.recurrenceId],
+      )).map(RecurrenceRule.fromRow).firstOrNull;
       final isFirst = isSameDay(occ.occurrenceDate, series.start);
       if (rule == null || scope == EditScope.all || (scope == EditScope.thisAndFollowing && isFirst)) {
         // Todos: aplica o deslocamento feito nesta ocorrência à série inteira.
@@ -207,9 +240,25 @@ class EventRepository {
             ? Duration(days: daysBetween(draft.event.start, draft.event.end))
             : draft.event.end.difference(draft.event.start);
         final newEnd = draft.event.allDay ? addDays(newStart, duration.inDays) : newStart.add(duration);
-        final ev = draft.event.copyWith(id: series.id, recurrenceId: series.recurrenceId, start: newStart, end: newEnd, createdAt: series.createdAt);
-        return _save(txn, EventDraft(event: ev, rule: draft.rule, tagNames: draft.tagNames, reminders: draft.reminders, remindersTouched: true),
-            now: now, defaultReminderMin: defaultReminderMin);
+        final ev = draft.event.copyWith(
+          id: series.id,
+          recurrenceId: series.recurrenceId,
+          start: newStart,
+          end: newEnd,
+          createdAt: series.createdAt,
+        );
+        return _save(
+          txn,
+          EventDraft(
+            event: ev,
+            rule: draft.rule,
+            tagNames: draft.tagNames,
+            reminders: draft.reminders,
+            remindersTouched: true,
+          ),
+          now: now,
+          defaultReminderMin: defaultReminderMin,
+        );
       }
       if (scope == EditScope.onlyThis) {
         final ex = EventException(
@@ -219,7 +268,11 @@ class EventRepository {
           newEnd: draft.event.end,
           newTitle: draft.event.title.trim() == series.title ? null : draft.event.title.trim(),
         );
-        await txn.insert('evento_excecao', ex.toRow(allDay: series.allDay), conflictAlgorithm: ConflictAlgorithm.replace);
+        await txn.insert(
+          'evento_excecao',
+          ex.toRow(allDay: series.allDay),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
         await txn.update('evento', {'atualizado_em': toIsoDateTime(now)}, where: 'id = ?', whereArgs: [series.id]);
         return series.id!;
       }
@@ -242,8 +295,18 @@ class EventRepository {
         createdAt: now,
         updatedAt: now,
       );
-      return _save(txn, EventDraft(event: newEvent, rule: newRule?.withoutId(), tagNames: draft.tagNames, reminders: draft.reminders, remindersTouched: true),
-          now: now, defaultReminderMin: defaultReminderMin);
+      return _save(
+        txn,
+        EventDraft(
+          event: newEvent,
+          rule: newRule?.withoutId(),
+          tagNames: draft.tagNames,
+          reminders: draft.reminders,
+          remindersTouched: true,
+        ),
+        now: now,
+        defaultReminderMin: defaultReminderMin,
+      );
     });
   }
 
@@ -254,7 +317,11 @@ class EventRepository {
         ? rule.copyWith(count: occurrencesBefore(rule, series.start, date))
         : rule.copyWith(until: addDays(dateOnly(date), -1));
     await txn.update('recorrencia', ended.toRow(), where: 'id = ?', whereArgs: [rule.id]);
-    await txn.delete('evento_excecao', where: 'evento_id = ? AND data_ocorrencia >= ?', whereArgs: [series.id, toIsoDate(date)]);
+    await txn.delete(
+      'evento_excecao',
+      where: 'evento_id = ? AND data_ocorrencia >= ?',
+      whereArgs: [series.id, toIsoDate(date)],
+    );
   }
 
   /// Exclui uma ocorrência conforme o [scope].
@@ -266,10 +333,20 @@ class EventRepository {
     await db.transaction((txn) async {
       if (scope == EditScope.onlyThis) {
         await txn.insert(
-            'evento_excecao', EventException(eventId: series.id!, occurrenceDate: occ.occurrenceDate, cancelled: true).toRow(allDay: series.allDay),
-            conflictAlgorithm: ConflictAlgorithm.replace);
+          'evento_excecao',
+          EventException(
+            eventId: series.id!,
+            occurrenceDate: occ.occurrenceDate,
+            cancelled: true,
+          ).toRow(allDay: series.allDay),
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
       } else {
-        final rule = (await txn.query('recorrencia', where: 'id = ?', whereArgs: [series.recurrenceId])).map(RecurrenceRule.fromRow).first;
+        final rule = (await txn.query(
+          'recorrencia',
+          where: 'id = ?',
+          whereArgs: [series.recurrenceId],
+        )).map(RecurrenceRule.fromRow).first;
         await _endSeriesBefore(txn, series, rule, occ.occurrenceDate);
       }
       await txn.update('evento', {'atualizado_em': toIsoDateTime(now)}, where: 'id = ?', whereArgs: [series.id]);
@@ -277,23 +354,29 @@ class EventRepository {
   }
 
   Future<void> delete(int id) => db.transaction((txn) async {
-        final rows = await txn.query('evento', columns: ['recorrencia_id'], where: 'id = ?', whereArgs: [id]);
-        await txn.delete('lembrete', where: "alvo_tipo = 'evento' AND alvo_id = ?", whereArgs: [id]);
-        await txn.delete('evento', where: 'id = ?', whereArgs: [id]);
-        final recId = rows.isEmpty ? null : rows.first['recorrencia_id'] as int?;
-        if (recId != null) await _deleteRuleIfUnused(txn, recId);
-      });
+    final rows = await txn.query('evento', columns: ['recorrencia_id'], where: 'id = ?', whereArgs: [id]);
+    await txn.delete('lembrete', where: "alvo_tipo = 'evento' AND alvo_id = ?", whereArgs: [id]);
+    await txn.delete('evento', where: 'id = ?', whereArgs: [id]);
+    final recId = rows.isEmpty ? null : rows.first['recorrencia_id'] as int?;
+    if (recId != null) await _deleteRuleIfUnused(txn, recId);
+  });
 
   /// Seed de carga (só em debug): [n] eventos espalhados em ±6 meses.
   Future<void> seedLoad(int n, DateTime now) => db.transaction((txn) async {
-        final batch = txn.batch();
-        final base = addDays(dateOnly(now), -180);
-        for (var i = 0; i < n; i++) {
-          final day = addDays(base, (i * 7) % 360);
-          final start = atMinutes(day, (7 + i % 12) * 60);
-          final e = Event(title: 'Carga $i', start: start, end: start.add(const Duration(hours: 1)), createdAt: now, updatedAt: now);
-          batch.insert('evento', e.toRow()..['busca'] = 'carga $i');
-        }
-        await batch.commit(noResult: true);
-      });
+    final batch = txn.batch();
+    final base = addDays(dateOnly(now), -180);
+    for (var i = 0; i < n; i++) {
+      final day = addDays(base, (i * 7) % 360);
+      final start = atMinutes(day, (7 + i % 12) * 60);
+      final e = Event(
+        title: 'Carga $i',
+        start: start,
+        end: start.add(const Duration(hours: 1)),
+        createdAt: now,
+        updatedAt: now,
+      );
+      batch.insert('evento', e.toRow()..['busca'] = 'carga $i');
+    }
+    await batch.commit(noResult: true);
+  });
 }
