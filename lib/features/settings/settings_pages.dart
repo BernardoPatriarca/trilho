@@ -434,8 +434,9 @@ class AboutPage extends ConsumerWidget {
                 final sw = Stopwatch()..start();
                 await ref.read(eventRepositoryProvider).seedLoad(2000, ref.now());
                 ref.dataChanged();
-                if (context.mounted)
+                if (context.mounted) {
                   showSnack(context, '2.000 eventos de carga criados em ${sw.elapsedMilliseconds} ms');
+                }
               },
               child: const Text('Gerar 2.000 eventos de carga'),
             ),

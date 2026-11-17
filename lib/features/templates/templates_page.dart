@@ -160,8 +160,9 @@ class _TemplateFormState extends State<_TemplateForm> {
                           initial: it.quantity ?? '',
                           hint: '2, 1 kg, 3 un',
                         );
-                        if (q != null)
+                        if (q != null) {
                           setState(() => _items[i] = it.copyWith(quantity: q.trim(), clearQuantity: q.trim().isEmpty));
+                        }
                       },
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,

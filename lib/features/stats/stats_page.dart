@@ -301,8 +301,9 @@ class _BarChart extends StatelessWidget {
                 reservedSize: 22,
                 getTitlesWidget: (v, meta) {
                   final i = v.toInt();
-                  if (i < 0 || i >= data.length || (i % step != 0 && i != data.length - 1))
+                  if (i < 0 || i >= data.length || (i % step != 0 && i != data.length - 1)) {
                     return const SizedBox.shrink();
+                  }
                   return SideTitleWidget(
                     meta: meta,
                     child: Text(label(data[i].day), style: TextStyle(fontSize: 10, color: c.textSecondary)),
