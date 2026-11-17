@@ -12,3 +12,5 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+# A chave de TESTE pode ir para o git (não é segredo; ver LEIAME-RELEASE.md).
+!app/trilho-teste.keystore
