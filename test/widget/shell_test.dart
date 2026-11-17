@@ -1,33 +1,18 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:trilho/app/app.dart';
 import 'package:trilho/app/theme.dart';
-import 'package:trilho/core/providers.dart';
 
-final fixedNow = DateTime(2026, 11, 17, 9);
-
-Future<void> pumpApp(WidgetTester tester) async {
-  Intl.defaultLocale = 'pt_BR';
-  await initializeDateFormatting('pt_BR');
-  await tester.pumpWidget(ProviderScope(
-    overrides: [clockProvider.overrideWithValue(() => fixedNow)],
-    child: const TrilhoApp(),
-  ));
-  await tester.pumpAndSettle();
-}
+import 'helpers.dart';
 
 void main() {
   testWidgets('abre na aba Hoje com a data por extenso', (tester) async {
-    await pumpApp(tester);
+    await pumpApp(tester, await openWidgetDb());
     expect(find.text('HOJE'), findsOneWidget);
     expect(find.text('Terça-feira, 17 de novembro'), findsOneWidget);
   });
 
   testWidgets('navega pelas 5 abas e o FAB some só em Mais', (tester) async {
-    await pumpApp(tester);
+    await pumpApp(tester, await openWidgetDb());
     final fab = find.byKey(const Key('quickAddFab'));
 
     for (final (tab, title) in const [
@@ -36,22 +21,22 @@ void main() {
       ('Estatísticas', 'ESTATÍSTICAS'),
     ]) {
       await tester.tap(find.text(tab));
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(find.text(title), findsOneWidget);
       expect(fab, findsOneWidget);
     }
 
     await tester.tap(find.text('Mais'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.text('MAIS'), findsOneWidget);
     expect(fab, findsNothing);
   });
 
   testWidgets('FAB abre a adição rápida com o seletor Tarefa/Evento',
       (tester) async {
-    await pumpApp(tester);
+    await pumpApp(tester, await openWidgetDb());
     await tester.tap(find.byKey(const Key('quickAddFab')));
-    await tester.pumpAndSettle();
+    await settle(tester);
     expect(find.text('ADIÇÃO RÁPIDA'), findsOneWidget);
     expect(find.byKey(const Key('quickAddField')), findsOneWidget);
     expect(find.text('Tarefa'), findsOneWidget);
@@ -59,11 +44,11 @@ void main() {
   });
 
   testWidgets('trocar o tema em Mais aplica o claro', (tester) async {
-    await pumpApp(tester);
+    await pumpApp(tester, await openWidgetDb());
     await tester.tap(find.text('Mais'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     await tester.tap(find.text('Claro'));
-    await tester.pumpAndSettle();
+    await settle(tester);
     final context = tester.element(find.text('MAIS'));
     expect(Theme.of(context).brightness, Brightness.light);
     expect(context.colors.background, TrilhoColors.light.background);
@@ -76,10 +61,10 @@ void main() {
     addTearDown(tester.view.reset);
     addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
 
-    await pumpApp(tester);
+    await pumpApp(tester, await openWidgetDb());
     for (final tab in const ['Agenda', 'Tarefas', 'Estatísticas', 'Mais']) {
       await tester.tap(find.text(tab).last);
-      await tester.pumpAndSettle();
+      await settle(tester);
       expect(tester.takeException(), isNull);
     }
   });

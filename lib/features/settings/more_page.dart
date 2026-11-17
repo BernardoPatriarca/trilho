@@ -35,8 +35,16 @@ class MorePage extends ConsumerWidget {
                       ButtonSegment(value: ThemeMode.light, label: Text('Claro')),
                     ],
                     selected: {mode},
-                    onSelectionChanged: (s) =>
-                        ref.read(themeModeProvider.notifier).set(s.first),
+                    onSelectionChanged: (s) async {
+                      await ref.read(configRepositoryProvider).set(
+                          'tema',
+                          switch (s.first) {
+                            ThemeMode.dark => 'escuro',
+                            ThemeMode.light => 'claro',
+                            ThemeMode.system => 'sistema',
+                          });
+                      ref.dataChanged();
+                    },
                   ),
                 ),
               ],
