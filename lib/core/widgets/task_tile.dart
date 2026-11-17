@@ -9,6 +9,7 @@ import '../../app/theme.dart';
 import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../domain/priority.dart';
+import '../../domain/quick_add_parser.dart' show durationLabel;
 import '../../domain/tasks.dart';
 import '../../features/tasks/task_actions.dart';
 import '../data_providers.dart';
@@ -176,6 +177,19 @@ class _TaskTileState extends ConsumerState<TaskTile> {
                                       fontFeatures: tabular,
                                     ),
                                   ),
+                                ),
+                              ],
+                            ),
+                          if (t.estimateMin != null)
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.timelapse, size: 14, color: c.textSecondary),
+                                const SizedBox(width: 3),
+                                Text(
+                                  durationLabel(t.estimateMin!),
+                                  semanticsLabel: 'duração ${durationLabel(t.estimateMin!)}',
+                                  style: TextStyle(fontSize: 12, color: c.textSecondary, fontFeatures: tabular),
                                 ),
                               ],
                             ),

@@ -12,7 +12,7 @@ import 'models.dart';
 import 'recurrence.dart';
 import 'text.dart';
 
-enum TokenKind { date, time, recurrence, category, tag, priority, event }
+enum TokenKind { date, time, duration, recurrence, category, tag, priority, event }
 
 /// Um trecho reconhecido (vira chip na tela).
 class RecognizedToken {
@@ -34,6 +34,7 @@ class QuickAddResult {
     this.tags = const [],
     this.priority,
     this.isEvent = false,
+    this.durationMin,
     this.tokens = const [],
   });
 
@@ -47,6 +48,10 @@ class QuickAddResult {
 
   /// Pediu evento com a palavra "evento" + horário.
   final bool isEvent;
+
+  /// Duração em minutos ("1h" junto de outro horário, "por 1h", "30 min",
+  /// "1 hora"). Vira a estimativa da tarefa ou o tamanho do evento.
+  final int? durationMin;
   final List<RecognizedToken> tokens;
 }
 
@@ -90,6 +95,10 @@ QuickAddResult parseQuickAdd(
   int? priority;
   var eventWord = false;
   var eventIdx = -1;
+  int? duration;
+  // Horários soltos encontrados (índice, minutos, se tem ':'): decididos no
+  // fim, porque "1h" pode ser horário ou duração.
+  final timeCandidates = <(int, int, bool)>[];
 
   String rawOf(int i, int n) => toks.sublist(i, i + n).map((t) => t.raw).join(' ');
   bool free(int i, int n) {
@@ -189,6 +198,21 @@ QuickAddResult parseQuickAdd(
       }
     }
 
+    // Duração explícita: "por 1h", "durante 30 min", "1 hora", "45 minutos".
+    if (duration == null) {
+      final lead = w == 'por' || w == 'durante';
+      final at = lead ? i + 1 : i;
+      final d1 = _parseDuration(norm(at), unit: norm(at + 1));
+      if (d1 != null && (lead || d1.$2 == 2 || _explicitDuration(norm(at)))) {
+        final n = (lead ? 1 : 0) + d1.$2;
+        if (free(i, n)) {
+          duration = d1.$1;
+          mark(i, n, TokenKind.duration, durationLabel(d1.$1));
+          continue;
+        }
+      }
+    }
+
     // "às 9", "as 18:30", "às 9h"
     if (minutes == null && (w == 'as' || w == 'a') && free(i, 2)) {
       final m = _parseTime(norm(i + 1), bare: true);
@@ -228,12 +252,10 @@ QuickAddResult parseQuickAdd(
         continue;
       }
     }
-    if (minutes == null) {
+    {
       final m = _parseTime(w);
       if (m != null) {
-        minutes = m;
-        absorbPreposition(i);
-        mark(i, 1, TokenKind.time, minutesToHm(m));
+        timeCandidates.add((i, m, w.contains(':')));
         continue;
       }
     }
@@ -268,6 +290,26 @@ QuickAddResult parseQuickAdd(
     }
   }
 
+  // Horários soltos: um vira o horário (o com ':' ou, senão, o último; se já
+  // veio "às N", nenhum) e outro "Nh" vira a duração. Ex.: "Estudar 1h todo
+  // dia 20h" → às 20:00, por 1 h.
+  if (timeCandidates.isNotEmpty) {
+    (int, int, bool)? chosen;
+    if (minutes == null) {
+      chosen = timeCandidates.where((c) => c.$3).firstOrNull ?? timeCandidates.last;
+      minutes = chosen.$2;
+      absorbPreposition(chosen.$1);
+      mark(chosen.$1, 1, TokenKind.time, minutesToHm(chosen.$2));
+    }
+    if (duration == null) {
+      final other = timeCandidates.where((c) => c != chosen && !c.$3 && c.$2 > 0).firstOrNull;
+      if (other != null) {
+        duration = other.$2;
+        mark(other.$1, 1, TokenKind.duration, durationLabel(other.$2));
+      }
+    }
+  }
+
   // "evento" só vale com horário; sem horário continua no título.
   final isEvent = eventWord && minutes != null;
   if (isEvent) mark(eventIdx, 1, TokenKind.event, 'Evento');
@@ -297,6 +339,7 @@ QuickAddResult parseQuickAdd(
     tags: tags,
     priority: priority,
     isEvent: isEvent,
+    durationMin: duration,
     tokens: [...tokens],
   );
 }
@@ -351,6 +394,37 @@ int? _parseTime(String w, {bool bare = false}) {
   final min = g2 == null || g2.isEmpty ? 0 : int.parse(g2);
   if (h > 23 || min > 59) return null;
   return h * 60 + min;
+}
+
+/// Duração: "1h", "1h30", "90min", "30 min", "2 horas", "45 minutos".
+/// Retorna (minutos, quantos tokens usou). [unit] é a palavra seguinte.
+(int, int)? _parseDuration(String w, {String unit = ''}) {
+  var m = RegExp(r'^(\d{1,2})h(\d{2})?(min)?$').firstMatch(w);
+  if (m != null) {
+    final total = int.parse(m.group(1)!) * 60 + (m.group(2) == null ? 0 : int.parse(m.group(2)!));
+    return total > 0 && total <= 24 * 60 ? (total, 1) : null;
+  }
+  m = RegExp(r'^(\d{1,3})(min|minutos?)$').firstMatch(w);
+  if (m != null) {
+    final total = int.parse(m.group(1)!);
+    return total > 0 && total <= 24 * 60 ? (total, 1) : null;
+  }
+  final n = int.tryParse(w);
+  if (n != null && n > 0) {
+    if ((unit == 'hora' || unit == 'horas' || unit == 'h') && n <= 24) return (n * 60, 2);
+    if ((unit == 'min' || unit == 'minuto' || unit == 'minutos') && n <= 24 * 60) return (n, 2);
+  }
+  return null;
+}
+
+/// Formas que só podem ser duração (nunca horário): "30min", "1h30min".
+bool _explicitDuration(String w) => w.endsWith('min') || w.endsWith('minuto') || w.endsWith('minutos');
+
+/// "1 h", "1 h 30", "45 min"
+String durationLabel(int minutes) {
+  if (minutes < 60) return '$minutes min';
+  final h = minutes ~/ 60, m = minutes % 60;
+  return m == 0 ? '$h h' : '$h h ${m.toString().padLeft(2, '0')}';
 }
 
 String _dateLabel(DateTime d, DateTime today) {

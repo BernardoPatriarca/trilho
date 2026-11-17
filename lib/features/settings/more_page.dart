@@ -62,7 +62,7 @@ class MorePage extends ConsumerWidget {
             subtitle: cfg?.lastBackup == null ? 'Nenhum backup ainda' : 'Último: ${dayMonthYear(cfg!.lastBackup!)}',
           ),
           item(Icons.school_outlined, 'Refazer a configuração inicial', '/mais/onboarding'),
-          item(Icons.info_outline, 'Sobre', '/mais/sobre', subtitle: 'Trilho 1.0.0'),
+          item(Icons.info_outline, 'Sobre', '/mais/sobre', subtitle: 'Trilho 1.0.1'),
         ],
       ),
     );

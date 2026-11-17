@@ -3,7 +3,7 @@ description: "Trilho: agenda, calendário e tarefas em um só lugar, 100% offlin
 publish_to: 'none'
 
 # versionName+versionCode do APK. Suba os dois a cada APK novo.
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: ^3.14.0

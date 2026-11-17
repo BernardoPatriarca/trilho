@@ -410,7 +410,7 @@ class AboutPage extends ConsumerWidget {
           const SizedBox(height: 12),
           Center(child: Text('TRILHO', style: Theme.of(context).textTheme.headlineMedium)),
           Center(
-            child: Text('Versão 1.0.0', style: TextStyle(color: c.textSecondary)),
+            child: Text('Versão 1.0.1', style: TextStyle(color: c.textSecondary)),
           ),
           const SizedBox(height: 16),
           const Text(

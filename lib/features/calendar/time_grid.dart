@@ -307,6 +307,26 @@ class _DayColumn extends StatelessWidget {
                 left: 0,
                 child: Container(width: 1, color: c.border.withValues(alpha: 0.4)),
               ),
+              // Tarefas com duração: faixa do período (ex.: 20h–21h) por baixo.
+              for (final t in tasks.where((t) => t.estimateMin != null))
+                Positioned(
+                  top: t.dueMinutes! * hourHeight / 60,
+                  height: (t.estimateMin! * hourHeight / 60).clamp(
+                    12.0,
+                    hourHeight * 24 - t.dueMinutes! * hourHeight / 60,
+                  ),
+                  left: 1,
+                  right: 1,
+                  child: IgnorePointer(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: c.accent.withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: c.accent.withValues(alpha: 0.7)),
+                      ),
+                    ),
+                  ),
+                ),
               for (final p in placed)
                 Positioned(
                   top: minutesOfDay(p.start) * hourHeight / 60,

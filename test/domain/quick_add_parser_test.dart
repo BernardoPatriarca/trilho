@@ -179,4 +179,51 @@ void main() {
     expect(r.tags, ['tcc']);
     expect(r.title, 'Entregar relatório do TCC');
   });
+
+  group('duração', () {
+    test('o caso do TCC: "1h" é duração e "20h" é o horário', () {
+      final r = p('Estudar e executar o TCC 1h todo dia 20h @trabalho #tcc !3');
+      expect(r.title, 'Estudar e executar o TCC');
+      expect(r.minutes, 20 * 60);
+      expect(r.durationMin, 60);
+      expect(r.rule!.freq, Freq.diaria);
+      expect(r.tokens.map((t) => t.label), containsAll(['20:00', '1 h']));
+    });
+    test('às 20h por 1h30', () {
+      final r = p('Estudar às 20h por 1h30');
+      expect(r.minutes, 20 * 60);
+      expect(r.durationMin, 90);
+      expect(r.title, 'Estudar');
+    });
+    test('horário com dois-pontos ganha da forma "Nh"', () {
+      final r = p('Academia 1h 18:30');
+      expect(r.minutes, 18 * 60 + 30);
+      expect(r.durationMin, 60);
+    });
+    test('30 min, 45min, 2 horas, durante 1 hora', () {
+      expect(p('Ler 30 min').durationMin, 30);
+      expect(p('Ler 45min').durationMin, 45);
+      expect(p('Correr 2 horas amanhã 7h').durationMin, 120);
+      final r = p('Meditar durante 1 hora 6h');
+      expect(r.durationMin, 60);
+      expect(r.minutes, 6 * 60);
+      expect(r.title, 'Meditar');
+    });
+    test('duração sozinha não inventa horário', () {
+      final r = p('Ler 30 min');
+      expect(r.minutes, isNull);
+      expect(r.date, isNull);
+      expect(r.title, 'Ler');
+    });
+    test('um único "Nh" continua sendo horário', () {
+      final r = p('Mercado 18h');
+      expect(r.minutes, 18 * 60);
+      expect(r.durationMin, isNull);
+    });
+    test('rótulo da duração', () {
+      expect(durationLabel(30), '30 min');
+      expect(durationLabel(60), '1 h');
+      expect(durationLabel(90), '1 h 30');
+    });
+  });
 }

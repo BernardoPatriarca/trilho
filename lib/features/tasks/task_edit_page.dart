@@ -13,6 +13,7 @@ import '../../core/widgets/form_fields.dart';
 import '../../domain/dates.dart';
 import '../../domain/models.dart';
 import '../../domain/priority.dart';
+import '../../domain/quick_add_parser.dart' show durationLabel;
 import 'checklist_editor.dart';
 import 'task_actions.dart';
 import 'task_repository.dart';
@@ -46,6 +47,7 @@ class _TaskEditPageState extends ConsumerState<TaskEditPage> {
   List<Reminder> _reminders = [];
   bool _remindersTouched = false;
   bool _pinned = false;
+  int? _estimate;
   final List<EditableItem> _items = [];
 
   bool get _isNew => _original?.id == null;
@@ -84,6 +86,7 @@ class _TaskEditPageState extends ConsumerState<TaskEditPage> {
     _rule = rule;
     _reminders = [...rem];
     _pinned = t.pinnedToday;
+    _estimate = t.estimateMin;
     _items
       ..clear()
       ..addAll([...items.where((i) => !i.checked), ...items.where((i) => i.checked)].map(EditableItem.from));
@@ -118,6 +121,8 @@ class _TaskEditPageState extends ConsumerState<TaskEditPage> {
         categoryId: _categoryId,
         clearCategory: _categoryId == null,
         pinnedToday: _pinned,
+        estimateMin: _estimate,
+        clearEstimate: _estimate == null,
       ),
       checklist: [for (final (i, it) in _items.indexed) it.toItem(i)],
       tagNames: _tags,
@@ -365,6 +370,33 @@ class _TaskEditPageState extends ConsumerState<TaskEditPage> {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
                   _minutes == null ? 'Padrão: lembrete às 9h do dia do prazo.' : 'Padrão: lembrete na hora do prazo.',
+                  style: TextStyle(fontSize: 12, color: c.textSecondary),
+                ),
+              ),
+            const SizedBox(height: 8),
+            const SectionTitle('Duração'),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  label: const Text('Sem'),
+                  selected: _estimate == null,
+                  onSelected: (_) => _touch(() => _estimate = null),
+                ),
+                for (final m in {15, 30, 45, 60, 90, 120, 180, ?_estimate})
+                  ChoiceChip(
+                    label: Text(durationLabel(m)),
+                    selected: _estimate == m,
+                    onSelected: (_) => _touch(() => _estimate = m),
+                  ),
+              ],
+            ),
+            if (_estimate != null && _minutes != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  'Das ${minutesToHm(_minutes!)} às ${minutesToHm((_minutes! + _estimate!) % (24 * 60))}',
                   style: TextStyle(fontSize: 12, color: c.textSecondary),
                 ),
               ),

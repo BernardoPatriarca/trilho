@@ -65,6 +65,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
             title: r.title,
             dueDate: r.date,
             dueMinutes: r.minutes,
+            estimateMin: r.durationMin,
             priority: r.priority ?? 4,
             categoryId: r.categoryId,
             createdAt: now,
@@ -85,7 +86,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
         event: Event(
           title: r.title,
           start: start,
-          end: allDay ? day : start.add(const Duration(hours: 1)),
+          end: allDay ? day : start.add(Duration(minutes: r.durationMin ?? 60)),
           allDay: allDay,
           categoryId: r.categoryId,
           createdAt: now,
@@ -154,6 +155,7 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
   IconData _icon(TokenKind k) => switch (k) {
     TokenKind.date => Icons.event_outlined,
     TokenKind.time => Icons.schedule,
+    TokenKind.duration => Icons.timelapse,
     TokenKind.recurrence => Icons.repeat,
     TokenKind.category => Icons.folder_outlined,
     TokenKind.tag => Icons.tag,
@@ -254,7 +256,9 @@ class _QuickAddSheetState extends ConsumerState<QuickAddSheet> {
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  r.minutes == null ? 'Sem horário: evento de dia inteiro.' : 'Evento de 1 hora.',
+                  r.minutes == null
+                      ? 'Sem horário: evento de dia inteiro.'
+                      : 'Evento de ${durationLabel(r.durationMin ?? 60)}.',
                   style: TextStyle(fontSize: 12, color: c.textSecondary),
                 ),
               ),
