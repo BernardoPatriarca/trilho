@@ -197,22 +197,36 @@ class _AgendaPageState extends ConsumerState<AgendaPage> {
               rightChevronIcon: Icon(Icons.chevron_right, color: c.text, semanticLabel: 'Próximo mês'),
             ),
             daysOfWeekStyle: DaysOfWeekStyle(
-              weekdayStyle: TextStyle(fontSize: 12, color: c.textSecondary),
-              weekendStyle: TextStyle(fontSize: 12, color: c.textSecondary),
+              weekdayStyle: TextStyle(fontFamily: bodyFont, fontSize: 12, color: c.textSecondary),
+              weekendStyle: TextStyle(fontFamily: bodyFont, fontSize: 12, color: c.textSecondary),
               dowTextFormatter: (d, _) => weekdayShort[d.weekday],
             ),
             calendarStyle: CalendarStyle(
               outsideDaysVisible: true,
-              defaultTextStyle: TextStyle(color: c.text, fontFeatures: tabular),
-              weekendTextStyle: TextStyle(color: c.text, fontFeatures: tabular),
-              outsideTextStyle: TextStyle(color: c.textSecondary.withValues(alpha: 0.5), fontFeatures: tabular),
+              defaultTextStyle: TextStyle(fontFamily: bodyFont, color: c.text, fontFeatures: tabular),
+              weekendTextStyle: TextStyle(fontFamily: bodyFont, color: c.text, fontFeatures: tabular),
+              outsideTextStyle: TextStyle(
+                fontFamily: bodyFont,
+                color: c.textSecondary.withValues(alpha: 0.5),
+                fontFeatures: tabular,
+              ),
               todayDecoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(color: c.accent, width: 2),
               ),
-              todayTextStyle: TextStyle(color: c.text, fontWeight: FontWeight.w700, fontFeatures: tabular),
+              todayTextStyle: TextStyle(
+                fontFamily: bodyFont,
+                color: c.text,
+                fontWeight: FontWeight.w700,
+                fontFeatures: tabular,
+              ),
               selectedDecoration: BoxDecoration(color: c.accent, shape: BoxShape.circle),
-              selectedTextStyle: TextStyle(color: c.onAccent, fontWeight: FontWeight.w700, fontFeatures: tabular),
+              selectedTextStyle: TextStyle(
+                fontFamily: bodyFont,
+                color: c.onAccent,
+                fontWeight: FontWeight.w700,
+                fontFeatures: tabular,
+              ),
               markersMaxCount: 4,
             ),
             calendarBuilders: CalendarBuilders<Object>(

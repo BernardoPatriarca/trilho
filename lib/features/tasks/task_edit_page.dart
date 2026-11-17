@@ -382,7 +382,7 @@ class _TaskEditPageState extends ConsumerState<TaskEditPage> {
               const Divider(),
               const SizedBox(height: 8),
               DefaultTextStyle(
-                style: TextStyle(fontSize: 12, color: c.textSecondary, fontFeatures: tabular),
+                style: TextStyle(fontFamily: bodyFont, fontSize: 12, color: c.textSecondary, fontFeatures: tabular),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

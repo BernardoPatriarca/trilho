@@ -289,10 +289,13 @@ class _BarChart extends StatelessWidget {
                 showTitles: true,
                 reservedSize: 28,
                 interval: maxY <= 5 ? 1 : (maxY / 4).ceilToDouble(),
-                getTitlesWidget: (v, meta) => SideTitleWidget(
-                  meta: meta,
-                  child: Text(v.toInt().toString(), style: TextStyle(fontSize: 10, color: c.textSecondary)),
-                ),
+                // Só valores inteiros (o topo do eixo é maxY × 1,2).
+                getTitlesWidget: (v, meta) => v != v.roundToDouble() || v > maxY
+                    ? const SizedBox.shrink()
+                    : SideTitleWidget(
+                        meta: meta,
+                        child: Text(v.toInt().toString(), style: TextStyle(fontSize: 10, color: c.textSecondary)),
+                      ),
               ),
             ),
             bottomTitles: AxisTitles(
